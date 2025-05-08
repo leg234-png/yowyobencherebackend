@@ -31,3 +31,35 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+# ========== Fichiers spécifiques aux IDEs Java ==========
+
+# Eclipse
+.settings/
+
+# IntelliJ IDEA
+.idea/
+out/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+
+
+# ========== Fichiers générés par la compilation Java ==========
+bin/
+*.class
+
+# ========== Fichiers système ==========
+.DS_Store
+Thumbs.db
+
+
+
+# ========== Fichiers de logs et caches ==========
+*.log

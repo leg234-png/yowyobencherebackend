@@ -1,19 +1,18 @@
 package com.yowyob.dev.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "offres")
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Offre {
@@ -25,9 +24,6 @@ public class Offre {
 
     @Column(name = "montant", nullable = false)
     private Double montant;
-
-    @Column(name = "date_offre", nullable = false)
-    private LocalDateTime dateOffre;
 
     @ManyToOne
     @JoinColumn(name = "enchere_id", nullable = false)

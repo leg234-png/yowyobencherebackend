@@ -1,4 +1,4 @@
-package com.yowyob.dev.models;
+package com.yowyob.dev.enumeration;
 
 public enum Role {
     SIMPLE,

@@ -1,13 +1,11 @@
 package com.yowyob.dev.models;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 
 @Embeddable
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class PaymentMethod {

@@ -1,23 +1,23 @@
 package com.yowyob.dev.models;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+
+
 @Entity
 @Table(name = "agences")
-@Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+@Setter
+@Getter
 public class Agence {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -28,18 +28,6 @@ public class Agence {
     @Column(name = "nom", nullable = false)
     private String nom;
 
-    @ManyToOne
-    @JoinColumn(name = "organisation_id")
-    private Organisation organisation;
-
-    @ManyToMany
-    @JoinTable(
-        name = "agence_membres",
-        joinColumns = @JoinColumn(name = "agence_id"),
-        inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<User> membres = new HashSet<>();
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -47,4 +35,17 @@ public class Agence {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+
+    @ManyToOne
+    @JoinColumn(name = "organisation_id")
+    private Organisation organisation;
+
+    @ManyToMany
+    @JoinTable(
+            name = "agence_membres",
+            joinColumns = @JoinColumn(name = "agence_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<User> membres = new HashSet<>();
 }

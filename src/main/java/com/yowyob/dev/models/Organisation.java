@@ -1,19 +1,23 @@
 package com.yowyob.dev.models;
 
+import com.yowyob.dev.enumeration.OrganisationType;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "organisations")
-@Data
+@Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Organisation {
@@ -30,9 +34,6 @@ public class Organisation {
     @Column(name = "type", nullable = false)
     private OrganisationType type;
 
-    @ManyToOne
-    @JoinColumn(name = "chef_id")
-    private User chef;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -41,4 +42,10 @@ public class Organisation {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+
+    @ManyToOne
+    @JoinColumn(name = "chef_id")
+    private User chef;
+
 }

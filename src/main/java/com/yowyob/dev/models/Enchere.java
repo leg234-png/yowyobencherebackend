@@ -1,19 +1,22 @@
 package com.yowyob.dev.models;
 
+import com.yowyob.dev.enumeration.EnchereStatus;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Entity
 @Table(name = "encheres")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Enchere {
@@ -59,7 +62,7 @@ public class Enchere {
     @Column(name = "condition")
     private String condition;
 
-    @OneToMany(mappedBy = "enchere", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "offres", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Offre> offres = new ArrayList<>();
 
     @ManyToMany
