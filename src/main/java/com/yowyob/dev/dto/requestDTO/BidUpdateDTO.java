@@ -4,8 +4,8 @@ import jakarta.validation.constraints.Positive;
 import lombok.Data;
 
 @Data
-public class OffreUpdateDTO {
+public class BidUpdateDTO {
 
     @Positive(message = "Le montant doit être supérieur à zéro.")
-    private Double montant;
+    private Double price;
 }

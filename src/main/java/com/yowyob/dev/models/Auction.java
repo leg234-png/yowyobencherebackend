@@ -1,6 +1,6 @@
 package com.yowyob.dev.models;
 
-import com.yowyob.dev.enumeration.OrganisationType;
+import com.yowyob.dev.enumeration.AuctionStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,42 +10,55 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
-
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
-@Table(name = "organisations")
-@Setter
+@Table
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Organisation {
+public class Auction {
+
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "nom", nullable = false)
-    private String nom;
+    private String title;
+
+    private String description;
+
+    private Double startingPrice;
+
+    private Double currentPrice;
+
+    private LocalDateTime startDate;
+
+    private LocalDateTime endDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false)
-    private OrganisationType type;
+    private AuctionStatus status;
 
+    private String sellerUsername;
+
+    @ManyToOne
+    private Category category;
+
+    private String imageUrl;
+
+    private String ItemCondition;
+
+    @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Bid> bids = new ArrayList<>();
+
+    @ElementCollection
+    private List<String> participants = new ArrayList<>();
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-
-    @ManyToOne
-    @JoinColumn(name = "chef_id")
-    private User chef;
-
 }

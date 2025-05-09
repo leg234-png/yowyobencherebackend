@@ -10,39 +10,29 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "notifications")
+@Table
 @Setter
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Notification {
+public class Bid {
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @Column(name = "type")
-    private String type;
 
-    @Column(name = "message", columnDefinition = "TEXT")
-    private String message;
-
-    @Column(name = "lue")
-    private Boolean lue = false;
+    private Double price;
 
     @ManyToOne
-    @JoinColumn(name = "utilisateur_id")
-    private User utilisateur;
+    @JoinColumn(name = "auction_id", nullable = false)
+    private Auction auction;
 
-    @Column(name = "donnees", columnDefinition = "TEXT")
-    private String donnees;
+    private String username;
 
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

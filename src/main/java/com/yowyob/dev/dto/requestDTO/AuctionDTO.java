@@ -10,32 +10,32 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
-public class EnchereDTO {
+public class AuctionDTO {
 
     @NotBlank(message = "Le titre est obligatoire.")
-    private String titre;
+    private String title;
 
     @NotBlank(message = "La description est obligatoire.")
     private String description;
 
     @NotNull(message = "Le prix initial est obligatoire.")
     @Positive(message = "Le prix initial doit être supérieur à zéro.")
-    private Double prixInitial;
+    private Double startingPrice;
 
     @NotNull(message = "La date de début est obligatoire.")
     @Future(message = "La date de début doit être dans le futur.")
-    private LocalDateTime dateDebut;
+    private LocalDateTime startDate;
 
     @NotNull(message = "La date de fin est obligatoire.")
     @Future(message = "La date de fin doit être dans le futur.")
-    private LocalDateTime dateFin;
+    private LocalDateTime endDate;
 
     @NotNull(message = "Le vendeur est obligatoire.")
-    private UUID vendeurId;
+    private String sellerUsername;
 
-    private UUID categorieId;
+    private UUID categoryId;
 
     private String imageUrl;
 
-    private String condition;
+    private String ItemCondition;
 }
