@@ -1,5 +1,6 @@
 package com.yowyob.dev.models;
 
+
 import com.yowyob.dev.enumeration.AuctionStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -51,10 +52,12 @@ public class Auction {
     private String ItemCondition;
 
     @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Bid> bids = new ArrayList<>();
+    private LinkedList<Bid> bids = new LinkedList<>();
+
 
     @ElementCollection
-    private List<String> participants = new ArrayList<>();
+    private LinkedList<String> participants = new LinkedList<>();
+
 
     @CreationTimestamp
     private LocalDateTime createdAt;

@@ -12,14 +12,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
@@ -28,10 +27,10 @@ public class BidService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
     private final RestTemplate restTemplate;
-    
+
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public ApiError createBid(BidDTO dto) {
         ApiError response = new ApiError();
-
         Optional<Auction> auctionOpt = auctionRepository.findById(dto.getAuctionId());
         if (auctionOpt.isEmpty()) {
             return new ApiError("404", "Auction not found", null);
@@ -42,10 +41,11 @@ public class BidService {
         }
 
         Auction auction = auctionOpt.get();
-        // Ajouter le participant s'il n'est pas déjà dans la liste
-        if (!auction.getParticipants().contains(dto.getUsername())) {
-            auction.getParticipants().add(dto.getUsername());
-            auctionRepository.save(auction);
+
+        if (dto.getPrice() < auction.getStartingPrice()) {
+            response.setMessage("You cannot provide an amount less than the original amount of the item");
+            response.setCode("400");
+            return response;
         }
 
         Bid bid = new Bid();
@@ -55,6 +55,32 @@ public class BidService {
         bid.setCreatedAt(LocalDateTime.now());
 
         Bid savedBid = bidRepository.save(bid);
+
+        int index = 0;
+
+        LinkedList<Bid> bids = auction.getBids();
+        LinkedList<String> participants = auction.getParticipants();
+
+        // Parcourir les bids pour trouver la bonne position
+        while (index < bids.size() &&
+                bids.get(index).getPrice() > savedBid.getPrice()) {
+            index++;
+        }
+
+        // Pour les égalités de montant
+        while (index < bids.size() &&
+                bids.get(index).getPrice().equals(savedBid.getPrice())) {
+            index++;
+        }
+
+        // Insérer dans les deux listes à la même position
+        bids.add(index, savedBid);
+        participants.add(index, savedBid.getUsername());
+
+        auction.setBids(bids);
+        auction.setParticipants(participants);
+
+        auctionRepository.save(auction);
 
         response.setCode("200");
         response.setMessage("Bid created");

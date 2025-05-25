@@ -45,7 +45,8 @@ public class AuctionSchedulerService {
 
 
             // TODO: ici tu peux déclencher un service de notification ou traitement post-vente
-            log.info("Enchère clôturée : {}", auction.getTitle());
+            log.info("Gagnant de l'enchère : {}", auction.getParticipants().getFirst());
+            log.info("Montant de l'enchère : {}", auction.getBids().getFirst());
 
             auctionRepository.save(auction);
         }

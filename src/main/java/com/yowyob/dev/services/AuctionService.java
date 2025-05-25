@@ -248,5 +248,13 @@ public class AuctionService {
     }
 
 
+    public ApiError getCategories() {
+        ApiError apiError = new ApiError();
 
+        apiError.setData(categoryRepository.findAll());
+        apiError.setMessage("list of categories");
+        apiError.setCode("200");
+
+        return apiError;
+    }
 }

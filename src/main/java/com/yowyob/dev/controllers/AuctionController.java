@@ -92,6 +92,12 @@ public class AuctionController {
         return auctionService.getAuctionsByStatut(status);
     }
 
+    @Operation(summary = "get all the categories",
+            description = "This route returns all the categories)")
+    @GetMapping("/categories")
+    public ApiError getCategories() {
+        return auctionService.getCategories();
+    }
 
 
 }

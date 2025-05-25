@@ -68,5 +68,4 @@ public class BidController {
         return bidService.getAllBidsOfAuction(auctionId);
     }
 
-    //TODO ajouter les annotations pour le swagger
 }
