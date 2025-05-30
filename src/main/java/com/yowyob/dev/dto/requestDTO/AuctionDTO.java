@@ -1,10 +1,12 @@
 package com.yowyob.dev.dto.requestDTO;
 
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
 
 @Data
 public class AuctionDTO {
@@ -32,7 +34,8 @@ public class AuctionDTO {
 
     private UUID categoryId;
 
-    private String imageUrl;
+    @NotNull(message = "Les images sont obligatoires.")
+    private List<MultipartFile> images;
 
     private String ItemCondition;
 }

@@ -14,10 +14,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -41,10 +43,10 @@ public class AuctionController {
 
     @Operation(summary = "create an auction",
             description = "create auction with the necessary values")
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiError create(@Parameter(
             description = "new values to create an auction",
-            required = true)@Valid @RequestBody AuctionDTO auctionDTO){
+            required = true)@Valid @ModelAttribute @RequestBody AuctionDTO auctionDTO) throws IOException {
         return auctionService.create(auctionDTO);
     }
 
@@ -71,7 +73,7 @@ public class AuctionController {
     @PatchMapping("/{id}")
     public ApiError update(@Parameter(
             description = "ID of the auction to update and new values ",
-            required = true)@PathVariable UUID id, @RequestBody AuctionUpdateDTO dto) {
+            required = true)@PathVariable UUID id, @RequestBody AuctionUpdateDTO dto) throws IOException {
         return auctionService.update(id, dto);
     }
 

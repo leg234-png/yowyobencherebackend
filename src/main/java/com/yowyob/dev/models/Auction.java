@@ -47,7 +47,8 @@ public class Auction {
     @ManyToOne
     private Category category;
 
-    private String imageUrl;
+    @ElementCollection
+    private List<String> imageUrls = new ArrayList<>();
 
     private String ItemCondition;
 

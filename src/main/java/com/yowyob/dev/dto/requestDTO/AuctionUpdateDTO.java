@@ -3,8 +3,10 @@ package com.yowyob.dev.dto.requestDTO;
 
 import com.yowyob.dev.enumeration.AuctionStatus;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -20,7 +22,7 @@ public class AuctionUpdateDTO {
 
     private LocalDateTime endDate;
 
-    private String imageUrl;
+    private List<MultipartFile> images;
 
     private String itemCondition;
 

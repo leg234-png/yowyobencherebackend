@@ -17,8 +17,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -39,7 +46,7 @@ public class AuctionService {
     }
 
 
-    public ApiError create(AuctionDTO auctionDTO) {
+    public ApiError create(AuctionDTO auctionDTO) throws IOException {
         ApiError apiError = new ApiError();
 
         Auction auction = new Auction();
@@ -55,7 +62,7 @@ public class AuctionService {
         auction.setCategory(optionalCategory.get());
         auction.setEndDate(auctionDTO.getEndDate());
         auction.setStartDate(auctionDTO.getStartDate());
-        auction.setImageUrl(auctionDTO.getImageUrl());
+        auction.setImageUrls(saveImages(auctionDTO.getImages()));
         auction.setStartingPrice(auctionDTO.getStartingPrice());
         auction.setDescription(auctionDTO.getDescription());
         auction.setTitle(auctionDTO.getTitle());
@@ -110,7 +117,7 @@ public class AuctionService {
         return apiError;
     }
 
-    public ApiError update(UUID id, AuctionUpdateDTO dto) {
+    public ApiError update(UUID id, AuctionUpdateDTO dto) throws IOException {
         ApiError apiError = new ApiError();
 
         Optional<Auction> optional = auctionRepository.findById(id);
@@ -146,8 +153,8 @@ public class AuctionService {
             auction.setEndDate(dto.getEndDate());
         }
 
-        if (dto.getImageUrl() != null) {
-            auction.setImageUrl(dto.getImageUrl());
+        if (dto.getImages() != null) {
+            auction.setImageUrls(saveImages(dto.getImages()));
         }
 
         if (dto.getItemCondition() != null) {
@@ -309,5 +316,25 @@ public class AuctionService {
                 status, now, endTimeLimit, pageable
         );
     }
+
+
+    public List<String> saveImages(List<MultipartFile> images) throws IOException {
+        String uploadDir = "uploads/";
+        List<String> imageUrls = new ArrayList<>();
+
+        Path uploadPath = Paths.get(uploadDir);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+
+        for (MultipartFile image : images) {
+            String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
+            Files.copy(image.getInputStream(), uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
+            imageUrls.add("http://157.90.26.3:8031/uploads/" + fileName);
+        }
+
+        return imageUrls;
+    }
+
 }
 
