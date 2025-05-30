@@ -1,9 +1,6 @@
 package com.yowyob.dev.dto.requestDTO;
 
-import jakarta.validation.constraints.Future;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -23,15 +20,15 @@ public class AuctionDTO {
     private Double startingPrice;
 
     @NotNull(message = "La date de début est obligatoire.")
-    @Future(message = "La date de début doit être dans le futur.")
+    @FutureOrPresent(message = "La date de début doit être dans le futur ou dans le présent.")
     private LocalDateTime startDate;
 
     @NotNull(message = "La date de fin est obligatoire.")
-    @Future(message = "La date de fin doit être dans le futur.")
+    @FutureOrPresent(message = "La date de fin doit être dans le futur ou  dans le présent.")
     private LocalDateTime endDate;
 
     @NotNull(message = "Le vendeur est obligatoire.")
-    private String sellerUsername;
+    private UUID agencyId;
 
     private UUID categoryId;
 

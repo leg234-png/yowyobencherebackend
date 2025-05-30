@@ -56,29 +56,36 @@ public class BidService {
 
         Bid savedBid = bidRepository.save(bid);
 
+
+        // Get the lists (they're already List<Bid> and List<String> now)
+        List<Bid> bids = auction.getBids();
+        List<String> participants = auction.getParticipants();
+
         int index = 0;
 
-        LinkedList<Bid> bids = auction.getBids();
-        LinkedList<String> participants = auction.getParticipants();
-
-        // Parcourir les bids pour trouver la bonne position
+// Find the correct position for insertion based on price (descending order)
         while (index < bids.size() &&
                 bids.get(index).getPrice() > savedBid.getPrice()) {
             index++;
         }
 
-        // Pour les égalités de montant
+// Handle equal prices - insert after existing bids with same price
         while (index < bids.size() &&
                 bids.get(index).getPrice().equals(savedBid.getPrice())) {
             index++;
         }
 
-        // Insérer dans les deux listes à la même position
+// Insert at the found position in both lists
         bids.add(index, savedBid);
         participants.add(index, savedBid.getUsername());
 
-        auction.setBids(bids);
-        auction.setParticipants(participants);
+// Set the auction reference for the new bid
+        savedBid.setAuction(auction);
+
+// Update current price if this is the highest bid
+        if (index == 0) { // First position means highest bid
+            auction.setCurrentPrice(savedBid.getPrice());
+        }
 
         auctionRepository.save(auction);
 
@@ -175,7 +182,7 @@ public class BidService {
         List<String> usernames = bidRepository.findParticipantsByAuctionOrderByPriceAsc(id);
 
         if (usernames.isEmpty()) {
-            response.setCode("404");
+            response.setCode("200");
             response.setMessage("Aucun participant trouvé pour cette enchère.");
             response.setData(null);
             return response;
@@ -196,7 +203,7 @@ public class BidService {
 
 
     public UserDTO getUserByUsername(String username) {
-        String url = "https://gateway.yowyob.com/auth-service/auth/user/username/" + username;
+        String url = "http://157.90.26.3:8032/api/user/" + username;
 
         try {
             ResponseEntity<UserDTO> response = restTemplate.getForEntity(url, UserDTO.class);

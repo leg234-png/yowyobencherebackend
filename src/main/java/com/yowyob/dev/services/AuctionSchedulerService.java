@@ -43,10 +43,15 @@ public class AuctionSchedulerService {
         for (Auction auction : expiredAuctions) {
             auction.setStatus(AuctionStatus.CLOSE);
 
-
-            // TODO: ici tu peux déclencher un service de notification ou traitement post-vente
-            log.info("Gagnant de l'enchère : {}", auction.getParticipants().getFirst());
-            log.info("Montant de l'enchère : {}", auction.getBids().getFirst());
+            // Check if there are any bids before accessing winner information
+            if (!auction.getBids().isEmpty() && !auction.getParticipants().isEmpty()) {
+                // TODO: ici tu peux déclencher un service de notification ou traitement post-vente
+                log.info("Gagnant de l'enchère : {}", auction.getParticipants().get(0));
+                log.info("Montant de l'enchère : {}", auction.getBids().get(0).getPrice());
+                log.info("Détails du bid gagnant : {}", auction.getBids().get(0));
+            } else {
+                log.info("Aucune enchère pour l'auction : {} - {}", auction.getId(), auction.getTitle());
+            }
 
             auctionRepository.save(auction);
         }

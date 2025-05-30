@@ -1,5 +1,7 @@
 package com.yowyob.dev.models;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
@@ -17,8 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Bid {
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
 
@@ -26,6 +27,7 @@ public class Bid {
 
     @ManyToOne
     @JoinColumn(name = "auction_id", nullable = false)
+    @JsonBackReference("bid-auction")
     private Auction auction;
 
     private String username;

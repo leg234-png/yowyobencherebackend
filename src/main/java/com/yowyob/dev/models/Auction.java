@@ -1,6 +1,7 @@
 package com.yowyob.dev.models;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.yowyob.dev.enumeration.AuctionStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,8 +24,7 @@ import java.util.*;
 public class Auction {
 
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private String title;
@@ -42,7 +42,7 @@ public class Auction {
     @Enumerated(EnumType.STRING)
     private AuctionStatus status;
 
-    private String sellerUsername;
+    private UUID agencyId;
 
     @ManyToOne
     private Category category;
@@ -52,11 +52,13 @@ public class Auction {
     private String ItemCondition;
 
     @OneToMany(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true)
-    private LinkedList<Bid> bids = new LinkedList<>();
-
+    @OrderColumn(name = "bid_order")
+    private List<Bid> bids = new ArrayList<>();
 
     @ElementCollection
-    private LinkedList<String> participants = new LinkedList<>();
+    @OrderColumn(name = "participant_order")
+    private List<String> participants = new ArrayList<>();
+
 
 
     @CreationTimestamp
