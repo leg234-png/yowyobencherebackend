@@ -1,71 +1,88 @@
 package com.yowyob.dev.controllers;
 
-import com.yowyob.dev.dto.requestDTO.BidUpdateDTO;
 import com.yowyob.dev.dto.requestDTO.BidDTO;
-import com.yowyob.dev.dto.responseDTO.ApiError;
+import com.yowyob.dev.dto.responseDTO.UserDTO;
+import com.yowyob.dev.models.Bid;
 import com.yowyob.dev.services.BidService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import lombok.AllArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import com.yowyob.dev.utils.JwtUtils;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import lombok.extern.slf4j.Slf4j;
+
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/bid")
-@AllArgsConstructor
+@RequestMapping("/bids") // Renommé pour suivre les conventions REST (pluriel)
+@Slf4j
 public class BidController {
 
     private final BidService bidService;
 
-    @PostMapping
-    public ApiError createBid(@Valid @RequestBody BidDTO dto) {
-        return bidService.createBid(dto);
+    public BidController(BidService bidService) {
+        this.bidService = bidService;
+    }
 
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('USER') or hasRole('AGENCY')")
+    public Mono<Bid> createBid(@Valid @RequestBody BidDTO dto) {
+        return JwtUtils.getCurrentUserInfo()
+                .doOnNext(userInfo -> log.info("User {} placing bid on auction {}",
+                        userInfo.getUsername(), dto.getAuctionId()))
+                .flatMap(userInfo -> {
+                    // S'assurer que l'utilisateur fait une offre pour lui-même
+                    dto.setUsername(userInfo.getUsername());
+                    return bidService.createBid(dto);
+                });
     }
 
     @GetMapping("/{id}")
-    public ApiError getBid(@PathVariable UUID id) {
-       return bidService.getBid(id);
-
+    @PreAuthorize("hasRole('USER') or hasRole('AGENCY') or hasRole('ADMIN')")
+    public Mono<Bid> getBid(@PathVariable UUID id) {
+        return bidService.getBid(id);
     }
 
     @GetMapping
-    public ApiError getAllBids() {
+    @PreAuthorize("hasRole('ADMIN')")
+    public Flux<Bid> getAllBids() {
         return bidService.getAllBids();
-
-    }
-
-    @PatchMapping("/{id}")
-    public ApiError updateBid(@PathVariable UUID id, @RequestBody BidUpdateDTO dto) {
-        return bidService.updateBid(id, dto);
-
     }
 
     @DeleteMapping("/{id}")
-    public ApiError deleteBid(@PathVariable UUID id) {
-        return bidService.deleteBid(id);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('USER') or hasRole('AGENCY') or hasRole('ADMIN')")
+    public Mono<Void> deleteBid(@PathVariable UUID id) {
+        return JwtUtils.getCurrentUserInfo()
+                .doOnNext(userInfo -> log.info("User {} deleting bid {}", userInfo.getUsername(), id))
+                .flatMap(userInfo -> bidService.deleteBid(id));
     }
 
-    @Operation(summary = "get the participants",
-            description = "This route allows you to have the 5 participants in descending order")
-    @GetMapping("/participants/{id}")
-    public ApiError getParticipants( @Parameter(
-            description = "ID of the auction whose participants we want to have",
-            required = true) @PathVariable UUID id){
-        return bidService.getParticipants(id);
+    // Endpoint public - voir les participants d'une enchère
+    @GetMapping("/auction/{auctionId}/participants")
+    public Flux<UserDTO> getAuctionParticipants(@PathVariable UUID auctionId) {
+        return bidService.getParticipants(auctionId);
     }
 
-    @Operation(summary = "get all bids of auction",
-            description = "This route allows you to have all bids of an auction")
+    // Endpoint public - voir toutes les offres d'une enchère
     @GetMapping("/auction/{auctionId}")
-    public ApiError getAllBids(@Parameter(
-            description = "Id of Auction",
-            required = true)
-        @PathVariable UUID auctionId
-    ){
+    public Flux<Bid> getAllBidsForAuction(@PathVariable UUID auctionId) {
         return bidService.getAllBidsOfAuction(auctionId);
     }
 
+    // Endpoint protégé - voir ses propres offres
+    @GetMapping("/my-bids")
+    @PreAuthorize("hasRole('USER') or hasRole('AGENCY')")
+    public Flux<Bid> getMyBids() {
+        return JwtUtils.getCurrentUsername()
+                .flatMapMany(username ->
+                        bidService.getAllBids()
+                                .filter(bid -> username.equals(bid.getUsername()))
+                );
+    }
 }

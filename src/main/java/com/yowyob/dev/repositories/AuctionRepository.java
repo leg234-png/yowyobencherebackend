@@ -2,57 +2,40 @@ package com.yowyob.dev.repositories;
 
 import com.yowyob.dev.models.Auction;
 import com.yowyob.dev.enumeration.AuctionStatus;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
-
 @Repository
-public interface AuctionRepository extends JpaRepository<Auction, UUID> {
+// On utilise R2dbcRepository ou ReactiveCrudRepository
+public interface AuctionRepository extends R2dbcRepository<Auction, UUID> {
 
-    @Query("SELECT e FROM Auction e WHERE :username IN elements(e.participants)")
-    List<Auction> findByParticipant(String username);
+    Flux<Auction> findByStatus(AuctionStatus status);
+    Flux<Auction> findByCategoryId(UUID categoryId);
+    Flux<Auction> findByEndDateBeforeAndStatus(LocalDateTime now, AuctionStatus auctionStatus);
+    Flux<Auction> findByAgencyId(UUID agencyId);
 
-    List<Auction> findByStatus(AuctionStatus status);
-    List<Auction> findByCategory_Id(UUID categoryId);
+    // Les requêtes avec pagination sont gérées différemment
+    @Query("SELECT * FROM auction WHERE created_at >= :cutoffDate ORDER BY created_at DESC LIMIT :limit OFFSET :offset")
+    Flux<Auction> findRecentAuctions(LocalDateTime cutoffDate, int limit, long offset);
 
-    List<Auction> findByEndDateBeforeAndStatus(LocalDateTime now, AuctionStatus auctionStatus);
+    @Query("SELECT COUNT(id) FROM auction WHERE created_at >= :cutoffDate")
+    Mono<Long> countRecentAuctions(LocalDateTime cutoffDate);
 
-    List<Auction> findByAgencyId(UUID agencyId);
+    @Query("SELECT * FROM auction WHERE status = :status AND end_date BETWEEN :startTime AND :endTime ORDER BY end_date ASC LIMIT :limit OFFSET :offset")
+    Flux<Auction> findEndingSoonAuctions(AuctionStatus status, LocalDateTime startTime, LocalDateTime endTime, int limit, long offset);
 
-    /**
-     * Trouve les enchères créées après une date donnée, triées par date de création décroissante
-     * @param cutoffDate Date limite
-     * @param pageable Paramètres de pagination
-     * @return Page d'enchères récentes
-     */
-    @Query("SELECT a FROM Auction a WHERE a.createdAt >= :cutoffDate ORDER BY a.createdAt DESC")
-    Page<Auction> findByCreatedAtAfterOrderByCreatedAtDesc(
-            @Param("cutoffDate") LocalDateTime cutoffDate,
-            Pageable pageable
-    );
+    @Query("SELECT COUNT(id) FROM auction WHERE status = :status AND end_date BETWEEN :startTime AND :endTime")
+    Mono<Long> countEndingSoonAuctions(AuctionStatus status, LocalDateTime startTime, LocalDateTime endTime);
 
-    /**
-     * Trouve les enchères avec un statut donné qui se terminent dans une plage de temps donnée
-     * @param status Statut de l'enchère
-     * @param startTime Heure de début de la plage
-     * @param endTime Heure de fin de la plage
-     * @param pageable Paramètres de pagination
-     * @return Page d'enchères se terminant bientôt
-     */
-    @Query("SELECT a FROM Auction a WHERE a.status = :status AND a.endDate BETWEEN :startTime AND :endTime ORDER BY a.endDate ASC")
-    Page<Auction> findByStatusAndEndDateBetweenOrderByEndDateAsc(
-            @Param("status") AuctionStatus status,
-            @Param("startTime") LocalDateTime startTime,
-            @Param("endTime") LocalDateTime endTime,
-            Pageable pageable
-    );
-
+    // Il n'y a pas d'équivalent direct pour "in elements()". Il faut une approche différente.
+    // Soit en dénormalisant (stocker les participants dans un champ texte/JSON), soit avec une table de jointure.
+    // Pour l'instant, on va supposer une table de jointure et écrire une requête plus complexe si nécessaire.
+    // Pour simplifier, nous allons charger les participants via le BidRepository.
 }

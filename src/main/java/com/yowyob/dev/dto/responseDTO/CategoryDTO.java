@@ -11,11 +11,8 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserDTO {
+public class CategoryDTO {
     private UUID id;
-    private String username;
     private String name;
-    private String phoneNumber; // Corrigé le nom de la propriété
-    private String email;
-    private String role;
+    private String description;
 }

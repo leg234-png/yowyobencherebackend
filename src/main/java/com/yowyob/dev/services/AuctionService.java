@@ -1,33 +1,33 @@
 package com.yowyob.dev.services;
 
 import com.yowyob.dev.dto.requestDTO.AuctionDTO;
-import com.yowyob.dev.dto.requestDTO.AuctionUpdateDTO;
-import com.yowyob.dev.dto.responseDTO.AgenceDTO;
-import com.yowyob.dev.dto.responseDTO.ApiError;
-import com.yowyob.dev.dto.responseDTO.UserDTO;
 import com.yowyob.dev.enumeration.AuctionStatus;
-import com.yowyob.dev.models.Category;
+import com.yowyob.dev.exceptions.NotFoundException;
+import com.yowyob.dev.mapper.AuctionMapper;
 import com.yowyob.dev.models.Auction;
-import com.yowyob.dev.repositories.CategoryRepository;
 import com.yowyob.dev.repositories.AuctionRepository;
+import com.yowyob.dev.repositories.BidRepository;
+import com.yowyob.dev.repositories.CategoryRepository;
+import com.yowyob.dev.security.CustomJwtAuthenticationConverter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -36,305 +36,226 @@ public class AuctionService {
 
     private final AuctionRepository auctionRepository;
     private final CategoryRepository categoryRepository;
-    private final RestTemplate restTemplate;
+    private final BidRepository bidRepository;
+    private final AuthService authService;
+    private final AuctionMapper auctionMapper;
+    private final String uploadPath;
+    private final String uploadBaseUrl;
 
-    public AuctionService(AuctionRepository auctionRepository, CategoryRepository categoryRepository, RestTemplate restTemplate) {
+    public AuctionService(AuctionRepository auctionRepository,
+                          CategoryRepository categoryRepository,
+                          BidRepository bidRepository,
+                          AuthService authService,
+                          AuctionMapper auctionMapper,
+                          @Value("${app.upload.path:uploads/}") String uploadPath,
+                          @Value("${app.upload.base-url:http://157.90.26.3:8031/api/uploads/}") String uploadBaseUrl) {
         this.auctionRepository = auctionRepository;
         this.categoryRepository = categoryRepository;
-        this.restTemplate = restTemplate;
+        this.bidRepository = bidRepository;
+        this.authService = authService;
+        this.auctionMapper = auctionMapper;
+        this.uploadPath = uploadPath != null ? uploadPath : "uploads/";
+        this.uploadBaseUrl = uploadBaseUrl != null ? uploadBaseUrl : "http://157.90.26.3:8031/api/uploads/";
 
-    }
-
-
-    public ApiError create(AuctionDTO auctionDTO) throws IOException {
-        ApiError apiError = new ApiError();
-
-        Auction auction = new Auction();
-        auction.setCreatedAt(LocalDateTime.now());
-        auction.setItemCondition(auctionDTO.getItemCondition());
-
-        Optional<Category> optionalCategory = categoryRepository.findById(auctionDTO.getCategoryId());
-        if (optionalCategory.isEmpty()) {
-            apiError.setMessage("Category not found");
-            apiError.setCode("404");
-            return apiError;
-        }
-        auction.setCategory(optionalCategory.get());
-        auction.setEndDate(auctionDTO.getEndDate());
-        auction.setStartDate(auctionDTO.getStartDate());
-        auction.setImageUrls(saveImages(auctionDTO.getImages()));
-        auction.setStartingPrice(auctionDTO.getStartingPrice());
-        auction.setDescription(auctionDTO.getDescription());
-        auction.setTitle(auctionDTO.getTitle());
-
-
-        AgenceDTO agenceDTO = verifierAgenceExiste(auctionDTO.getAgencyId());
-        if (agenceDTO == null) {
-            apiError.setMessage("agency not found");
-            apiError.setCode("404");
-            return apiError;
-        }
-        auction.setAgencyId(auctionDTO.getAgencyId());
-
-        auction.setStatus(AuctionStatus.OPEN);
-
-        apiError.setMessage("L'enchere a été crée avec succès!");
-        apiError.setCode("200");
-        apiError.setData(auctionRepository.save(auction));
-        return apiError;
-    }
-
-    public ApiError getAuction(UUID id) {
-        ApiError apiError = new ApiError();
-
-        Optional<Auction> optionalAuction = auctionRepository.findById(id);
-        if(optionalAuction.isEmpty()) {
-            apiError.setMessage("Auction not found");
-            apiError.setCode("404");
-            return apiError;
-        }
-        apiError.setMessage("Auction get successfully");
-        apiError.setCode("200");
-        apiError.setData(optionalAuction.get());
-        return apiError;
-    }
-
-    public ApiError getAuctionsByAgenceId(UUID id) {
-        ApiError apiError = new ApiError();
-
-
-        AgenceDTO agenceDTO = verifierAgenceExiste(id);
-        if (agenceDTO == null) {
-            apiError.setMessage("Agency not found");
-            apiError.setCode("404");
-            return apiError;
-        }
-        List<Auction> auctions = auctionRepository.findByAgencyId(id);
-
-        apiError.setMessage("success");
-        apiError.setCode("200");
-        apiError.setData(auctions);
-        return apiError;
-    }
-
-    public ApiError update(UUID id, AuctionUpdateDTO dto) throws IOException {
-        ApiError apiError = new ApiError();
-
-        Optional<Auction> optional = auctionRepository.findById(id);
-        if (optional.isEmpty()) {
-            apiError.setMessage("Auction not found");
-            apiError.setCode("404");
-            return apiError;
-        }
-
-        Auction auction = optional.get();
-
-        if (dto.getTitle() != null) {
-            auction.setTitle(dto.getTitle());
-        }
-
-        if(dto.getStatus() != null) {
-            auction.setStatus(dto.getStatus());
-        }
-
-        if (dto.getDescription() != null) {
-            auction.setDescription(dto.getDescription());
-        }
-
-        if (dto.getStartingPrice() != null) {
-            auction.setStartingPrice(dto.getStartingPrice());
-        }
-
-        if (dto.getStartDate() != null) {
-            auction.setStartDate(dto.getStartDate());
-        }
-
-        if (dto.getEndDate() != null) {
-            auction.setEndDate(dto.getEndDate());
-        }
-
-        if (dto.getImages() != null) {
-            auction.setImageUrls(saveImages(dto.getImages()));
-        }
-
-        if (dto.getItemCondition() != null) {
-            auction.setItemCondition(dto.getItemCondition());
-        }
-
-        if (dto.getCategory_id() != null){
-            Optional<Category> optionalCategory = categoryRepository.findById(dto.getCategory_id());
-            if (optionalCategory.isEmpty()) {
-                apiError.setMessage("Category not found");
-                apiError.setCode("404");
-                return apiError;
-            }
-            auction.setCategory(optionalCategory.get());
-        }
-
-        auctionRepository.save(auction);
-
-        apiError.setMessage("Auction updated successfully");
-        apiError.setCode("200");
-        return apiError;
-    }
-
-    public ApiError delete(UUID id) {
-        ApiError apiError = new ApiError();
-
-        Optional<Auction> optional = auctionRepository.findById(id);
-        if (optional.isEmpty()) {
-            apiError.setMessage("Auction not found");
-            apiError.setCode("404");
-            return apiError;
-        }
-
-        auctionRepository.delete(optional.get());
-        apiError.setMessage("auction deleted successfully");
-        apiError.setCode("204");
-        return apiError;
-
-    }
-
-    public ApiError getAuctionsByCategoryId(UUID id) {
-
-        ApiError apiError = new ApiError();
-
-        Optional<Category> optionalCategory = categoryRepository.findById(id);
-        if (optionalCategory.isEmpty()) {
-            apiError.setMessage("Category not found");
-            apiError.setCode("404");
-            return apiError;
-        }
-
-        List<Auction> auctions = auctionRepository.findByCategory_Id(id);
-        apiError.setMessage("Success");
-        apiError.setCode("200");
-        apiError.setData(auctions);
-
-        return apiError;
-
-    }
-
-    public ApiError getAuctionsByParticipants(String username) {
-        ApiError apiError = new ApiError();
-
-        UserDTO userDTO = verifierUtilisateurExiste(username);
-        if(userDTO == null) {
-            apiError.setMessage("Participant not found");
-            apiError.setCode("404");
-            return apiError;
-        }
-
-        List<Auction> auctions = auctionRepository.findByParticipant(username);
-        apiError.setMessage("Success");
-        apiError.setCode("200");
-        apiError.setData(auctions);
-
-        return apiError;
-
-    }
-
-    public ApiError getAuctionsByStatut(AuctionStatus status) {
-        ApiError apiError = new ApiError();
-
-        List<Auction> auctions = auctionRepository.findByStatus(status);
-
-        apiError.setMessage("Success");
-        apiError.setCode("200");
-        apiError.setData(auctions);
-        return apiError;
-    }
-
-
-    public UserDTO verifierUtilisateurExiste(String username ) {
-        String url = "http://157.90.26.3:8032/api/user/" + username;
-
+        // Créer le répertoire d'upload s'il n'existe pas
         try {
-            ResponseEntity<UserDTO> response = restTemplate.getForEntity(url, UserDTO.class);
-
-            // Si on arrive ici et que le status est 200 OK, l'utilisateur existe
-            return response.getBody();
-        } catch (HttpClientErrorException.NotFound e) {
-            return null;
-        } catch (Exception e) {
-            // Autre problème de connexion ou erreur serveur
-            throw new RuntimeException("Impossible de contacter le service utilisateur", e);
-        }
-    }
-    public AgenceDTO verifierAgenceExiste(UUID id) {
-        String url = "http://157.90.26.3:8032/api/agencies/" + id;
-
-        try {
-            ResponseEntity<AgenceDTO> response = restTemplate.getForEntity(url, AgenceDTO.class);
-            return response.getBody();
-        } catch (HttpClientErrorException.NotFound e) {
-            return null;
-        } catch (Exception e) {
-            // Autre problème de connexion ou erreur serveur
-            throw new RuntimeException("Impossible de contacter le service ", e);
+            Files.createDirectories(Paths.get(this.uploadPath));
+            log.info("Upload directory created/verified: {}", this.uploadPath);
+        } catch (IOException e) {
+            log.error("Failed to create upload directory: {}", this.uploadPath, e);
         }
     }
 
+    @Transactional
+    public Mono<Auction> createAuction(AuctionDTO auctionDTO, Flux<FilePart> imageFiles) {
+        log.info("Creating auction: {}", auctionDTO.getTitle());
 
-    public ApiError getCategories() {
-        ApiError apiError = new ApiError();
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .flatMap(authToken -> {
+                    String username = CustomJwtAuthenticationConverter.extractUsername(authToken.getToken());
+                    String userId = CustomJwtAuthenticationConverter.extractUserId(authToken.getToken());
 
-        apiError.setData(categoryRepository.findAll());
-        apiError.setMessage("list of categories");
-        apiError.setCode("200");
+                    log.debug("Creating auction for user: {} with ID: {}", username, userId);
 
-        return apiError;
+                    Auction auction = auctionMapper.toAuction(auctionDTO);
+                    auction.setId(UUID.randomUUID());
+                    auction.setStatus(AuctionStatus.OPEN);
+                    auction.setCreatedAt(LocalDateTime.now());
+                    auction.setUpdatedAt(LocalDateTime.now());
+
+                    // Vérifier que l'agence existe
+                    Mono<Boolean> agencyExists = authService.agencyExists(auction.getAgencyId().toString());
+                    // Vérifier que la catégorie existe
+                    Mono<Boolean> categoryExists = categoryRepository.existsById(auction.getCategoryId());
+
+                    return Mono.zip(agencyExists, categoryExists)
+                            .flatMap(tuple -> {
+                                if (!tuple.getT1()) {
+                                    log.warn("Agency not found: {}", auction.getAgencyId());
+                                    return Mono.error(new NotFoundException("Agency not found"));
+                                }
+                                if (!tuple.getT2()) {
+                                    log.warn("Category not found: {}", auction.getCategoryId());
+                                    return Mono.error(new NotFoundException("Category not found"));
+                                }
+
+                                // Sauvegarder les images
+                                return saveImages(imageFiles).collectList();
+                            })
+                            .flatMap(imageUrls -> {
+                                auction.setImageUrls(imageUrls);
+                                return auctionRepository.save(auction);
+                            });
+                })
+                .switchIfEmpty(Mono.error(new NotFoundException("Authentication required")))
+                .doOnSuccess(auction -> log.info("Auction created successfully: {}", auction.getId()))
+                .doOnError(error -> log.error("Error creating auction: {}", error.getMessage()));
     }
 
-
-
-    /**
-     * Récupère les enchères créées récemment
-     * @param cutoffDate Date limite pour considérer une enchère comme récente
-     * @param pageable Paramètres de pagination
-     * @return Page d'enchères récentes
-     */
-    public Page<Auction> findRecentAuctions(LocalDateTime cutoffDate, Pageable pageable) {
-        log.debug("Recherche des enchères créées après: {}", cutoffDate);
-        return auctionRepository.findByCreatedAtAfterOrderByCreatedAtDesc(cutoffDate, pageable);
+    public Mono<Auction> getAuctionById(UUID id) {
+        return auctionRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Auction not found")))
+                .flatMap(this::enrichAuctionWithDetails);
     }
 
-    /**
-     * Récupère les enchères actives qui se terminent bientôt
-     * @param now Moment actuel
-     * @param endTimeLimit Limite de temps pour considérer qu'une enchère se termine bientôt
-     * @param status Statut des enchères à rechercher (généralement OPEN)
-     * @param pageable Paramètres de pagination
-     * @return Page d'enchères se terminant bientôt
-     */
-    public Page<Auction> findAuctionsEndingSoon(LocalDateTime now,
-                                                LocalDateTime endTimeLimit,
-                                                AuctionStatus status,
-                                                Pageable pageable) {
-        log.debug("Recherche des enchères {} se terminant entre {} et {}", status, now, endTimeLimit);
-        return auctionRepository.findByStatusAndEndDateBetweenOrderByEndDateAsc(
-                status, now, endTimeLimit, pageable
+    private Mono<Auction> enrichAuctionWithDetails(Auction auction) {
+        Mono<List<String>> participantsMono = bidRepository
+                .findParticipantsByAuctionOrderByPriceDesc(auction.getId())
+                .collectList();
+
+        Mono<Auction> auctionMono = Mono.just(auction);
+
+        return Mono.zip(auctionMono, participantsMono, (auc, participants) -> {
+            auc.setParticipants(participants);
+            return auc;
+        });
+    }
+
+    public Flux<Auction> getAuctionsByAgencyId(UUID agencyId) {
+        return authService.agencyExists(agencyId.toString())
+                .flatMapMany(exists -> {
+                    if (!exists) {
+                        return Flux.error(new NotFoundException("Agency not found"));
+                    }
+                    return auctionRepository.findByAgencyId(agencyId);
+                });
+    }
+
+    public Mono<Page<Auction>> findRecentAuctions(Pageable pageable, int days) {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(days);
+
+        Flux<Auction> auctions = auctionRepository.findRecentAuctions(
+                cutoffDate,
+                pageable.getPageSize(),
+                pageable.getOffset()
         );
+
+        Mono<Long> total = auctionRepository.countRecentAuctions(cutoffDate);
+
+        return Mono.zip(auctions.collectList(), total)
+                .map(tuple -> new PageImpl<>(tuple.getT1(), pageable, tuple.getT2()));
     }
 
+    public Mono<Page<Auction>> findAuctionsEndingSoon(Pageable pageable, int hours) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime endTime = now.plusHours(hours);
 
-    public List<String> saveImages(List<MultipartFile> images) throws IOException {
-        String uploadDir = "uploads/";
-        List<String> imageUrls = new ArrayList<>();
+        Flux<Auction> auctions = auctionRepository.findEndingSoonAuctions(
+                AuctionStatus.OPEN,
+                now,
+                endTime,
+                pageable.getPageSize(),
+                pageable.getOffset()
+        );
 
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
+        Mono<Long> total = auctionRepository.countEndingSoonAuctions(
+                AuctionStatus.OPEN,
+                now,
+                endTime
+        );
 
-        for (MultipartFile image : images) {
-            String fileName = UUID.randomUUID() + "_" + image.getOriginalFilename();
-            Files.copy(image.getInputStream(), uploadPath.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-            imageUrls.add("http://157.90.26.3:8031/uploads/" + fileName);
-        }
-
-        return imageUrls;
+        return Mono.zip(auctions.collectList(), total)
+                .map(tuple -> new PageImpl<>(tuple.getT1(), pageable, tuple.getT2()));
     }
 
+    /**
+     * Sauvegarde les images uploadées et retourne les URLs
+     */
+    private Flux<String> saveImages(Flux<FilePart> fileParts) {
+        return fileParts.flatMap(filePart -> {
+            String fileName = UUID.randomUUID() + "_" + filePart.filename();
+            Path targetFile = Paths.get(uploadPath).resolve(fileName);
+
+            return filePart.transferTo(targetFile)
+                    .then(Mono.just(uploadBaseUrl + fileName))
+                    .doOnSuccess(url -> log.debug("Image saved: {}", url))
+                    .onErrorResume(error -> {
+                        log.error("Error saving image: {}", error.getMessage());
+                        return Mono.empty(); // Ignorer cette image en cas d'erreur
+                    });
+        });
+    }
+
+    /**
+     * Met à jour une enchère (seulement par le propriétaire)
+     */
+    public Mono<Auction> updateAuction(UUID auctionId, AuctionDTO updateDto) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .flatMap(authToken -> {
+                    String username = CustomJwtAuthenticationConverter.extractUsername(authToken.getToken());
+
+                    return auctionRepository.findById(auctionId)
+                            .switchIfEmpty(Mono.error(new NotFoundException("Auction not found")))
+                            .flatMap(existingAuction -> {
+                                // Vérifier que l'utilisateur peut modifier cette enchère
+                                // TODO: Implémenter la logique de vérification du propriétaire
+
+                                // Mettre à jour les champs
+                                if (updateDto.getTitle() != null) {
+                                    existingAuction.setTitle(updateDto.getTitle());
+                                }
+                                if (updateDto.getDescription() != null) {
+                                    existingAuction.setDescription(updateDto.getDescription());
+                                }
+                                if (updateDto.getEndDate() != null) {
+                                    existingAuction.setEndDate(updateDto.getEndDate());
+                                }
+                                existingAuction.setUpdatedAt(LocalDateTime.now());
+
+                                return auctionRepository.save(existingAuction);
+                            });
+                })
+                .switchIfEmpty(Mono.error(new NotFoundException("Authentication required")));
+    }
+
+    /**
+     * Supprime une enchère (seulement par le propriétaire)
+     */
+    public Mono<Void> deleteAuction(UUID auctionId) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .flatMap(authToken -> {
+                    String username = CustomJwtAuthenticationConverter.extractUsername(authToken.getToken());
+                    String role = authToken.getToken().getClaimAsString("libelle");
+
+                    return auctionRepository.findById(auctionId)
+                            .switchIfEmpty(Mono.error(new NotFoundException("Auction not found")))
+                            .flatMap(auction -> {
+                                // Vérifier que l'utilisateur peut supprimer cette enchère
+                                // TODO: Implémenter la logique de vérification du propriétaire
+                                // ou vérifier si c'est un admin
+                                if (!"ADMIN".equalsIgnoreCase(role)) {
+                                    // Logique additionnelle pour vérifier le propriétaire
+                                }
+
+                                return auctionRepository.delete(auction);
+                            });
+                })
+                .switchIfEmpty(Mono.error(new NotFoundException("Authentication required")));
+    }
 }
-

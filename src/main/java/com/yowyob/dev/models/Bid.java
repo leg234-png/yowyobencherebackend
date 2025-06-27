@@ -1,40 +1,28 @@
 package com.yowyob.dev.models;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table
+@Table("bid")
 @Setter
 @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Bid {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-
     private Double price;
-
-    @ManyToOne
-    @JoinColumn(name = "auction_id", nullable = false)
-    @JsonBackReference("bid-auction")
-    private Auction auction;
-
+    @Column("auction_id")
+    private UUID auctionId;
     private String username;
-
-    @CreationTimestamp
+    @Column("created_at")
     private LocalDateTime createdAt;
-
-    @UpdateTimestamp
+    @Column("updated_at")
     private LocalDateTime updatedAt;
 }
