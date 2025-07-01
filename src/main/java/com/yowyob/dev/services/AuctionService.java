@@ -1,26 +1,40 @@
 package com.yowyob.dev.services;
 
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yowyob.dev.dto.requestDTO.AuctionDTO;
 import com.yowyob.dev.enumeration.AuctionStatus;
 import com.yowyob.dev.exceptions.NotFoundException;
 import com.yowyob.dev.mapper.AuctionMapper;
 import com.yowyob.dev.models.Auction;
+import com.yowyob.dev.models.ImageUrl;
 import com.yowyob.dev.repositories.AuctionRepository;
 import com.yowyob.dev.repositories.BidRepository;
 import com.yowyob.dev.repositories.CategoryRepository;
+import com.yowyob.dev.repositories.ImageUrlRepository;
 import com.yowyob.dev.security.CustomJwtAuthenticationConverter;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,6 +43,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -41,26 +56,32 @@ public class AuctionService {
     private final AuctionMapper auctionMapper;
     private final String uploadPath;
     private final String uploadBaseUrl;
+    private final R2dbcEntityTemplate r2dbcEntityTemplate;
+    @Value("${app.user-service.base-url:http://157.90.26.3:8032/api}")
+    private String userServiceBaseUrl;
+    private final ImageUrlRepository imageUrlRepository;
 
     public AuctionService(AuctionRepository auctionRepository,
                           CategoryRepository categoryRepository,
                           BidRepository bidRepository,
                           AuthService authService,
                           AuctionMapper auctionMapper,
+                          R2dbcEntityTemplate r2dbcEntityTemplate,
                           @Value("${app.upload.path:uploads/}") String uploadPath,
-                          @Value("${app.upload.base-url:http://157.90.26.3:8031/api/uploads/}") String uploadBaseUrl) {
+                          @Value("${app.upload.base-url:http://157.90.26.3:8031/api/uploads/}") String uploadBaseUrl, ImageUrlRepository imageUrlRepository) {
         this.auctionRepository = auctionRepository;
         this.categoryRepository = categoryRepository;
         this.bidRepository = bidRepository;
         this.authService = authService;
         this.auctionMapper = auctionMapper;
+        this.r2dbcEntityTemplate = r2dbcEntityTemplate;
         this.uploadPath = uploadPath != null ? uploadPath : "uploads/";
         this.uploadBaseUrl = uploadBaseUrl != null ? uploadBaseUrl : "http://157.90.26.3:8031/api/uploads/";
+        this.imageUrlRepository = imageUrlRepository;
 
         // Créer le répertoire d'upload s'il n'existe pas
         try {
             Files.createDirectories(Paths.get(this.uploadPath));
-            log.info("Upload directory created/verified: {}", this.uploadPath);
         } catch (IOException e) {
             log.error("Failed to create upload directory: {}", this.uploadPath, e);
         }
@@ -68,51 +89,72 @@ public class AuctionService {
 
     @Transactional
     public Mono<Auction> createAuction(AuctionDTO auctionDTO, Flux<FilePart> imageFiles) {
-        log.info("Creating auction: {}", auctionDTO.getTitle());
 
         return ReactiveSecurityContextHolder.getContext()
-                .map(context -> context.getAuthentication())
+                .map(SecurityContext::getAuthentication)
                 .cast(JwtAuthenticationToken.class)
                 .flatMap(authToken -> {
-                    String username = CustomJwtAuthenticationConverter.extractUsername(authToken.getToken());
-                    String userId = CustomJwtAuthenticationConverter.extractUserId(authToken.getToken());
-
-                    log.debug("Creating auction for user: {} with ID: {}", username, userId);
-
                     Auction auction = auctionMapper.toAuction(auctionDTO);
                     auction.setId(UUID.randomUUID());
                     auction.setStatus(AuctionStatus.OPEN);
                     auction.setCreatedAt(LocalDateTime.now());
                     auction.setUpdatedAt(LocalDateTime.now());
 
-                    // Vérifier que l'agence existe
-                    Mono<Boolean> agencyExists = authService.agencyExists(auction.getAgencyId().toString());
-                    // Vérifier que la catégorie existe
-                    Mono<Boolean> categoryExists = categoryRepository.existsById(auction.getCategoryId());
+                    Mono<Boolean> agencyExistsMono = authService.agencyExists(auction.getAgencyId().toString());
+                    Mono<Boolean> categoryExistsMono = auction.getCategoryId() != null
+                            ? categoryRepository.existsById(auction.getCategoryId())
+                            : Mono.just(true);
 
-                    return Mono.zip(agencyExists, categoryExists)
+                    return Mono.zip(agencyExistsMono, categoryExistsMono)
                             .flatMap(tuple -> {
-                                if (!tuple.getT1()) {
+                                Boolean agencyExists = tuple.getT1();
+                                Boolean categoryExists = tuple.getT2();
+
+                                if (!agencyExists) {
                                     log.warn("Agency not found: {}", auction.getAgencyId());
                                     return Mono.error(new NotFoundException("Agency not found"));
                                 }
-                                if (!tuple.getT2()) {
+
+                                if (!categoryExists) {
                                     log.warn("Category not found: {}", auction.getCategoryId());
                                     return Mono.error(new NotFoundException("Category not found"));
                                 }
 
-                                // Sauvegarder les images
-                                return saveImages(imageFiles).collectList();
+                                // 1. Insérer l'auction
+                                return r2dbcEntityTemplate.insert(Auction.class)
+                                        .using(auction)
+                                        .doOnSuccess(a -> log.info("Auction inserted with id: {}", a.getId()))
+                                        // 2. Puis gérer les images
+                                        .flatMap(savedAuction -> savePhotos(savedAuction.getId(), imageFiles)
+                                                .then(Mono.just(savedAuction)));
                             })
-                            .flatMap(imageUrls -> {
-                                auction.setImageUrls(imageUrls);
-                                return auctionRepository.save(auction);
-                            });
+                            .doOnSubscribe(sub -> log.debug("Validation en cours pour l'enchère : {}", auction));
+
                 })
                 .switchIfEmpty(Mono.error(new NotFoundException("Authentication required")))
                 .doOnSuccess(auction -> log.info("Auction created successfully: {}", auction.getId()))
                 .doOnError(error -> log.error("Error creating auction: {}", error.getMessage()));
     }
+
+    private Mono<Void> savePhotos(UUID auctionId, Flux<FilePart> imageFiles) {
+        return imageFiles.flatMap(filePart -> {
+                    String filename = UUID.randomUUID() + "_" + filePart.filename();
+                    Path path = Paths.get("uploads/" + filename);
+
+                    return filePart.transferTo(path)
+                            .then(Mono.fromCallable(() -> {
+                                ImageUrl imageUrl = new ImageUrl();
+                                imageUrl.setId(UUID.randomUUID());
+                                imageUrl.setAuctionId(auctionId);
+                                imageUrl.setUrl("/uploads/" + filename);
+                                return imageUrl;
+                            }));
+                })
+                .flatMap(imageUrl -> r2dbcEntityTemplate.insert(ImageUrl.class)
+                        .using(imageUrl))
+                .then();
+    }
+
 
     public Mono<Auction> getAuctionById(UUID id) {
         return auctionRepository.findById(id)
@@ -258,4 +300,72 @@ public class AuctionService {
                 })
                 .switchIfEmpty(Mono.error(new NotFoundException("Authentication required")));
     }
+
+//    public void testAgencyExistsDirect() {
+//        String testUrl = "http://157.90.26.3:8032/api/agencies/ae961770-2673-45f6-b3a1-744c2c5de6ed";
+//
+//        WebClient client = WebClient.builder()
+//                .clientConnector(new ReactorClientHttpConnector(
+//                        HttpClient.create()
+//                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+//                                .doOnConnected(conn -> {
+//                                    conn.addHandlerLast(new ReadTimeoutHandler(3, TimeUnit.SECONDS));
+//                                    conn.addHandlerLast(new WriteTimeoutHandler(3, TimeUnit.SECONDS));
+//                                })))
+//                .build();
+//
+//        String response = null;
+//        try {
+//            response = client.get()
+//                    .uri(testUrl)
+//                    .retrieve()
+//                    .bodyToMono(String.class)
+//                    .doOnSuccess(r -> System.out.println("✅ Réponse dans doOnSuccess : " + r))
+//                    .block();
+//            System.out.println("🟢 Réponse après block() : " + response);
+//        } catch (Exception e) {
+//            System.err.println("❌ Erreur attrapée : " + e.getClass().getSimpleName() + " - " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//
+//    }
+
+    public Mono<Boolean> testAgencyExistsDirect(String agencyId) {
+        String url = userServiceBaseUrl + "/agencies/" + agencyId;
+
+        WebClient webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(
+                        HttpClient.create()
+                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                                .doOnConnected(conn -> {
+                                    conn.addHandlerLast(new ReadTimeoutHandler(3, TimeUnit.SECONDS));
+                                    conn.addHandlerLast(new WriteTimeoutHandler(3, TimeUnit.SECONDS));
+                                })))
+                .build();
+
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(String.class)
+                .doOnNext(response -> System.out.println("✅ Réponse reçue : " + response))
+                .map(response -> {
+                    try {
+                        // Parse manuellement le champ "value"
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode jsonNode = mapper.readTree(response);
+                        return "200".equals(jsonNode.get("value").asText());
+                    } catch (Exception e) {
+                        System.err.println("❌ Erreur parsing JSON: " + e.getMessage());
+                        return false;
+                    }
+                });
+    }
+
+    // Méthode pour récupérer les images d'une enchère
+    public Mono<List<String>> getImagesByAuctionId(UUID auctionId) {
+        return imageUrlRepository.findByAuctionId(auctionId)
+                .map(ImageUrl::getUrl)
+                .collectList();
+    }
+
 }

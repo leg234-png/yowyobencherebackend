@@ -34,8 +34,8 @@ public class CustomAuthenticationEntryPoint implements ServerAuthenticationEntry
     private Mono<Void> writeErrorResponse(ServerWebExchange exchange, HttpStatus status,
                                           String message, String details) {
         ApiError apiError = ApiError.builder()
-                .code(String.valueOf(status.value()))
-                .message(message)
+                .value(String.valueOf(status.value()))
+                .text(message)
                 .data(details)
                 .build();
 

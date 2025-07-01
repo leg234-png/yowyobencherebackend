@@ -16,7 +16,7 @@ public class CorsGlobalConfiguration  {
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration corsConfig = new CorsConfiguration();
-        corsConfig.setAllowedOrigins(Collections.singletonList("*")); // autorise toutes les origines
+        corsConfig.setAllowedOriginPatterns(Arrays.asList("*"));
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         corsConfig.setAllowedHeaders(Collections.singletonList("*"));
         corsConfig.setExposedHeaders(Collections.singletonList("Authorization")); // exposer certains headers

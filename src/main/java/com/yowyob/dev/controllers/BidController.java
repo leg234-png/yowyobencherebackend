@@ -7,7 +7,6 @@ import com.yowyob.dev.services.BidService;
 import com.yowyob.dev.utils.JwtUtils;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,7 +29,6 @@ public class BidController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('USER') or hasRole('AGENCY')")
     public Mono<Bid> createBid(@Valid @RequestBody BidDTO dto) {
         return JwtUtils.getCurrentUserInfo()
                 .doOnNext(userInfo -> log.info("User {} placing bid on auction {}",
@@ -43,20 +41,17 @@ public class BidController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('AGENCY') or hasRole('ADMIN')")
     public Mono<Bid> getBid(@PathVariable UUID id) {
         return bidService.getBid(id);
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
     public Flux<Bid> getAllBids() {
         return bidService.getAllBids();
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('USER') or hasRole('AGENCY') or hasRole('ADMIN')")
     public Mono<Void> deleteBid(@PathVariable UUID id) {
         return JwtUtils.getCurrentUserInfo()
                 .doOnNext(userInfo -> log.info("User {} deleting bid {}", userInfo.getUsername(), id))
@@ -77,7 +72,6 @@ public class BidController {
 
     // Endpoint protégé - voir ses propres offres
     @GetMapping("/my-bids")
-    @PreAuthorize("hasRole('USER') or hasRole('AGENCY')")
     public Flux<Bid> getMyBids() {
         return JwtUtils.getCurrentUsername()
                 .flatMapMany(username ->

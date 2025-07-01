@@ -34,8 +34,8 @@ public class AuctionDTO {
 
     private UUID categoryId;
 
-    @NotNull(message = "Les images sont obligatoires.")
-    private List<MultipartFile> images;
+//    @NotNull(message = "Les images sont obligatoires.")
+//    private List<MultipartFile> images;
 
     private String ItemCondition;
 }

@@ -44,6 +44,7 @@ public class SecurityConfig {
                                 "/api/auctions/categories",
                                 "/api/uploads/**",
                                 "/api/test/public",
+                                "/api/auctions/test",
                                 "/actuator/health"
                         ).permitAll()
                         // Documentation API

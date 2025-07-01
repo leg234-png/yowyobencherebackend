@@ -18,10 +18,11 @@ public interface AuctionMapper {
     @Mapping(target = "participants", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "imageUrls", ignore = true)
+   // @Mapping(target = "imageUrls", ignore = true)
     Auction toAuction(AuctionDTO auctionDTO);
 
     // Le champ "category" dans AuctionResponseDTO sera mappé en utilisant le CategoryMapper
+    @Mapping(target = "imageUrls", ignore = true)
     AuctionResponseDTO toResponseDTO(Auction auction);
 
     void updateAuctionFromDto(AuctionUpdateDTO dto, @MappingTarget Auction auction);

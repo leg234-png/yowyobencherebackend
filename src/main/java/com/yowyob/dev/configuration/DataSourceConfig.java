@@ -28,14 +28,4 @@ public class DataSourceConfig {
         return dataSourceBuilder.build();
     }
 
-    // Optionnel, mais peut aider à voir si Flyway est bien appelé
-    @Bean
-    public FlywayMigrationStrategy cleanMigrateStrategy() {
-        System.out.println("### CONFIGURING FLYWAY MIGRATION STRATEGY ###");
-        return flyway -> {
-            // Vous pouvez ajouter une logique ici si nécessaire, par ex:
-            // flyway.clean(); // Attention: efface tout ! A n'utiliser qu'en dev.
-            flyway.migrate();
-        };
-    }
 }

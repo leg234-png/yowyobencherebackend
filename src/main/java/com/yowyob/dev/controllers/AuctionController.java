@@ -1,8 +1,10 @@
 package com.yowyob.dev.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yowyob.dev.dto.requestDTO.AuctionDTO;
 import com.yowyob.dev.dto.responseDTO.AuctionResponseDTO;
+import com.yowyob.dev.exceptions.InvalidRequestException;
 import com.yowyob.dev.mapper.AuctionMapper;
 import com.yowyob.dev.mapper.CategoryMapper;
 import com.yowyob.dev.models.Auction;
@@ -14,11 +16,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -44,21 +51,61 @@ public class AuctionController {
         this.objectMapper = objectMapper;
     }
 
-    @SneakyThrows
+    @GetMapping("/test")
+    public Mono<ResponseEntity<String>> check() {
+        return auctionService.testAgencyExistsDirect("ae961770-2673-45f6-b3a1-744c2c5de6ed")
+                .map(exists -> {
+                    if (exists) return ResponseEntity.ok("✔️ Agence trouvée !");
+                    else return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Agence introuvable.");
+                });
+    }
+
+    @GetMapping("/test-uuid")
+    public Mono<Map<String, Object>> testUuid() {
+        Map<String, Object> testData = new HashMap<>();
+        testData.put("testId", UUID.randomUUID());
+        testData.put("anotherUuid", UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
+        testData.put("currentTime", LocalDateTime.now());
+        testData.put("message", "Test UUID serialization");
+
+        return Mono.just(testData);
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('USER') or hasRole('AGENCY') or hasRole('ADMIN')")
     public Mono<AuctionResponseDTO> createAuction(
-            @RequestPart("request") String request,
-            @RequestPart("images") Flux<FilePart> imageFiles) {
+            @RequestPart("auction") String auctionJSON,
+            @RequestPart(value = "images", required = false) Flux<FilePart> imageFiles) {
 
-        return JwtUtils.getCurrentUserInfo()
-                .doOnNext(userInfo -> log.info("User {} creating auction", userInfo.getUsername()))
-                .then(Mono.fromCallable(() -> objectMapper.readValue(request, AuctionDTO.class)))
-                .flatMap(auctionDTO -> auctionService.createAuction(auctionDTO, imageFiles))
+        return parseAuctionRequest(auctionJSON) // ← Parsing manuel
+                .flatMap(auctionDTO -> {
+                    Flux<FilePart> safeImageFiles = imageFiles != null ? imageFiles : Flux.empty();
+                    return auctionService.createAuction(auctionDTO, safeImageFiles);
+                })
                 .flatMap(this::buildResponseDTO)
-                .doOnSuccess(auction -> log.info("Auction created: {}", auction.getId()))
-                .doOnError(error -> log.error("Error creating auction: {}", error.getMessage()));
+                .onErrorMap(JsonProcessingException.class,
+                        ex -> new InvalidRequestException("Invalid auction data format", ex));
+    }
+
+    private Mono<AuctionResponseDTO> buildResponseDTO(Auction auction) {
+        return auctionService.getImagesByAuctionId(auction.getId())
+                .map(imageUrls -> {
+                    AuctionResponseDTO responseDTO = auctionMapper.toResponseDTO(auction);
+                    responseDTO.setImageUrls(imageUrls);
+                    return responseDTO;
+                });
+
+    }
+    private Mono<AuctionDTO> parseAuctionRequest(String request) {
+        return Mono.fromCallable(() -> {
+            try {
+                log.info("Parsing auction request: {}", request); // ← Debug log
+                return objectMapper.readValue(request, AuctionDTO.class);
+            } catch (JsonProcessingException e) {
+                log.error("Failed to parse auction request: {}", e.getMessage(), e); // ← Erreur détaillée
+                throw e;
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
     }
 
     // Endpoint public - pas d'authentification requise
@@ -115,7 +162,6 @@ public class AuctionController {
 
     // Endpoint protégé - authentification requise
     @GetMapping("/my-auctions")
-    @PreAuthorize("hasRole('USER') or hasRole('AGENCY') or hasRole('ADMIN')")
     public Flux<AuctionResponseDTO> getMyAuctions() {
         return JwtUtils.getCurrentUserInfo()
                 .doOnNext(userInfo -> log.info("User {} retrieving their auctions", userInfo.getUsername()))
@@ -129,7 +175,6 @@ public class AuctionController {
 
     // Endpoint protégé - seul le propriétaire ou un admin peut modifier
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('USER') or hasRole('AGENCY') or hasRole('ADMIN')")
     public Mono<AuctionResponseDTO> updateAuction(
             @PathVariable UUID id,
             @RequestBody AuctionDTO updateDto) {
@@ -143,19 +188,18 @@ public class AuctionController {
     // Endpoint protégé - seul le propriétaire ou un admin peut supprimer
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('USER') or hasRole('AGENCY') or hasRole('ADMIN')")
     public Mono<Void> deleteAuction(@PathVariable UUID id) {
         return JwtUtils.getCurrentUserInfo()
                 .doOnNext(userInfo -> log.info("User {} deleting auction {}", userInfo.getUsername(), id))
                 .flatMap(userInfo -> auctionService.deleteAuction(id));
     }
 
-    private Mono<AuctionResponseDTO> buildResponseDTO(Auction auction) {
-        AuctionResponseDTO dto = auctionMapper.toResponseDTO(auction);
-        return categoryRepository.findById(auction.getCategoryId())
-                .map(categoryMapper::toDTO)
-                .doOnNext(dto::setCategory)
-                .thenReturn(dto);
-    }
+//    private Mono<AuctionResponseDTO> buildResponseDTO(Auction auction) {
+//        AuctionResponseDTO dto = auctionMapper.toResponseDTO(auction);
+//        return categoryRepository.findById(auction.getCategoryId())
+//                .map(categoryMapper::toDTO)
+//                .doOnNext(dto::setCategory)
+//                .thenReturn(dto);
+//    }
 
 }

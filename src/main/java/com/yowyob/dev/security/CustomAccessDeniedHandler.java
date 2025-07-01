@@ -24,8 +24,8 @@ public class CustomAccessDeniedHandler implements ServerAccessDeniedHandler {
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, AccessDeniedException denied) {
         ApiError apiError = ApiError.builder()
-                .code(String.valueOf(HttpStatus.FORBIDDEN.value()))
-                .message("Access denied")
+                .value(String.valueOf(HttpStatus.FORBIDDEN.value()))
+                .text("Access denied")
                 .data("You don't have permission to access this resource: " + denied.getMessage())
                 .build();
 

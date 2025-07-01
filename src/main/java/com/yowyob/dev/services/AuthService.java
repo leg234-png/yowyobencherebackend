@@ -1,15 +1,23 @@
 package com.yowyob.dev.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yowyob.dev.dto.responseDTO.UserDTO;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -101,9 +109,9 @@ public class AuthService {
                     log.error("Error retrieving user details for username: {}", username, ex);
                     return createEmptyUserDTO(username);
                 })
-                .retryWhen(Retry.backoff(3, Duration.ofMillis(500))
+                .retryWhen(Retry.backoff(3, Duration.ofMillis(5000))
                         .filter(throwable -> !(throwable instanceof WebClientResponseException.NotFound)))
-                .timeout(Duration.ofSeconds(5));
+                .timeout(Duration.ofSeconds(1000));
     }
 
     /**
@@ -135,25 +143,34 @@ public class AuthService {
      * Vérifie si une agence existe
      */
     public Mono<Boolean> agencyExists(String agencyId) {
-        String url = userServiceBaseUrl + "/agencies/" + agencyId;
+       String url = userServiceBaseUrl + "/agencies/" + agencyId;
+
+        WebClient webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(
+                        HttpClient.create()
+                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                                .doOnConnected(conn -> {
+                                    conn.addHandlerLast(new ReadTimeoutHandler(3, TimeUnit.SECONDS));
+                                    conn.addHandlerLast(new WriteTimeoutHandler(3, TimeUnit.SECONDS));
+                                })))
+                .build();
 
         return webClient.get()
                 .uri(url)
                 .retrieve()
-                .toBodilessEntity()
-                .map(response -> response.getStatusCode().is2xxSuccessful())
-                .doOnSuccess(exists -> log.debug("Agency {} exists: {}", agencyId, exists))
-                .onErrorResume(WebClientResponseException.NotFound.class, ex -> {
-                    log.debug("Agency {} not found", agencyId);
-                    return Mono.just(false);
-                })
-                .onErrorResume(Exception.class, ex -> {
-                    log.error("Error checking if agency {} exists", agencyId, ex);
-                    return Mono.just(false);
-                })
-                .retryWhen(Retry.backoff(3, Duration.ofMillis(500))
-                        .filter(throwable -> !(throwable instanceof WebClientResponseException.NotFound)))
-                .timeout(Duration.ofSeconds(5));
+                .bodyToMono(String.class)
+                .doOnNext(response -> System.out.println("Réponse reçue : " + response))
+                .map(response -> {
+                    try {
+                        // Parse manuellement le champ "value"
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode jsonNode = mapper.readTree(response);
+                        return "200".equals(jsonNode.get("value").asText());
+                    } catch (Exception e) {
+                        System.err.println("Erreur parsing JSON: " + e.getMessage());
+                        return false;
+                    }
+                });
     }
 
     /**
