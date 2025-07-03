@@ -11,7 +11,6 @@ import com.yowyob.dev.models.Auction;
 import com.yowyob.dev.repositories.CategoryRepository;
 import com.yowyob.dev.services.AuctionService;
 import com.yowyob.dev.utils.JwtUtils;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;

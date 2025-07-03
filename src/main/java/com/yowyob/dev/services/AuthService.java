@@ -12,10 +12,12 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.util.retry.Retry;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -37,30 +39,43 @@ public class AuthService {
                 .build();
     }
 
-    /**
-     * Vérifie si un utilisateur existe par son username/email
-     * Compatible avec votre endpoint
-     */
+
     public Mono<Boolean> userExists(String username) {
-        String url = authServiceBaseUrl + "/auth/username/" + username;
+//        String url = authServiceBaseUrl + "/user/username/";
+        URI finalUri = UriComponentsBuilder.fromHttpUrl(authServiceBaseUrl)
+                .path("/user/email")
+                .queryParam("emailDTO", username)
+                .build()
+                .toUri();
+
+        System.out.println(finalUri);
+
+        WebClient webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(
+                        HttpClient.create()
+                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                                .doOnConnected(conn -> {
+                                    conn.addHandlerLast(new ReadTimeoutHandler(3, TimeUnit.SECONDS));
+                                    conn.addHandlerLast(new WriteTimeoutHandler(3, TimeUnit.SECONDS));
+                                })))
+                .build();
 
         return webClient.get()
-                .uri(url)
+                .uri(finalUri)
                 .retrieve()
-                .toBodilessEntity()
-                .map(response -> response.getStatusCode().is2xxSuccessful())
-                .doOnSuccess(exists -> log.debug("User {} exists: {}", username, exists))
-                .onErrorResume(WebClientResponseException.NotFound.class, ex -> {
-                    log.debug("User {} not found", username);
-                    return Mono.just(false);
-                })
-                .onErrorResume(Exception.class, ex -> {
-                    log.error("Error checking if user {} exists", username, ex);
-                    return Mono.just(false);
-                })
-                .retryWhen(Retry.backoff(3, Duration.ofMillis(500))
-                        .filter(throwable -> !(throwable instanceof WebClientResponseException.NotFound)))
-                .timeout(Duration.ofSeconds(5));
+                .bodyToMono(String.class)
+                .doOnNext(response -> System.out.println("Réponse reçue : " + response))
+                .map(response -> {
+                    try {
+                        // Parse manuellement le champ "value"
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode jsonNode = mapper.readTree(response);
+                        return "200".equals(jsonNode.get("value").asText());
+                    } catch (Exception e) {
+                        System.err.println("Erreur parsing JSON: " + e.getMessage());
+                        return false;
+                    }
+                });
     }
 
     /**

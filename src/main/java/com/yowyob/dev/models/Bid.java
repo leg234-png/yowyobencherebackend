@@ -2,6 +2,7 @@ package com.yowyob.dev.models;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -14,7 +15,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Bid {
+public class Bid implements Persistable<UUID> {
     @Id
     private UUID id;
     private Double price;
@@ -25,4 +26,9 @@ public class Bid {
     private LocalDateTime createdAt;
     @Column("updated_at")
     private LocalDateTime updatedAt;
+
+    @Override
+    public boolean isNew() {
+        return true; // Toujours considérer comme nouveau pour les nouvelles instances
+    }
 }

@@ -114,13 +114,14 @@ public class BidService {
 
                     // 4. Créer et sauvegarder le Bid, et mettre à jour l'enchère
                     Bid newBid = bidMapper.toBid(dto);
-                    newBid.setId(UUID.randomUUID());
+
                     newBid.setCreatedAt(LocalDateTime.now());
                     newBid.setUpdatedAt(LocalDateTime.now());
 
                     auction.setCurrentPrice(newBid.getPrice());
                     auction.setUpdatedAt(LocalDateTime.now());
 
+                    newBid.setId(UUID.randomUUID());
                     // Envelopper la sauvegarde du bid et de l'auction dans une seule transaction
                     return bidRepository.save(newBid)
                             .then(auctionRepository.save(auction))

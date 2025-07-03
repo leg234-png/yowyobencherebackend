@@ -13,6 +13,6 @@ import java.util.UUID;
 public interface BidRepository extends R2dbcRepository<Bid, UUID> {
     Flux<Bid> findByAuctionId(UUID auctionId);
 
-    @Query("SELECT DISTINCT username FROM bid WHERE auction_id = :auctionId ORDER BY price DESC")
+    @Query("SELECT username FROM bid WHERE auction_id = :auctionId GROUP BY username ORDER BY MAX(price) DESC")
     Flux<String> findParticipantsByAuctionOrderByPriceDesc(UUID auctionId);
 }

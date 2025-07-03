@@ -31,8 +31,6 @@ public class BidController {
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<Bid> createBid(@Valid @RequestBody BidDTO dto) {
         return JwtUtils.getCurrentUserInfo()
-                .doOnNext(userInfo -> log.info("User {} placing bid on auction {}",
-                        userInfo.getUsername(), dto.getAuctionId()))
                 .flatMap(userInfo -> {
                     // S'assurer que l'utilisateur fait une offre pour lui-même
                     dto.setUsername(userInfo.getUsername());
