@@ -47,6 +47,9 @@ public class SecurityConfig {
                                 "/api/auctions/test",
                                 "/actuator/health"
                         ).permitAll()
+                        .pathMatchers("/api/uploads/**").permitAll()
+                        // Permettre l'accès public aux ressources statiques
+                        .pathMatchers("/uploads/**").permitAll()
                         // Documentation API
                         .pathMatchers(
                                 "/v3/api-docs/**",
