@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yowyob.dev.dto.requestDTO.AuctionDTO;
 import com.yowyob.dev.dto.responseDTO.AuctionResponseDTO;
+import com.yowyob.dev.dto.responseDTO.PageResponse;
+import com.yowyob.dev.enumeration.AuctionStatus;
 import com.yowyob.dev.exceptions.InvalidRequestException;
 import com.yowyob.dev.mapper.AuctionMapper;
 import com.yowyob.dev.mapper.CategoryMapper;
@@ -11,6 +13,7 @@ import com.yowyob.dev.models.Auction;
 import com.yowyob.dev.repositories.CategoryRepository;
 import com.yowyob.dev.services.AuctionService;
 import com.yowyob.dev.utils.JwtUtils;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
@@ -200,5 +203,43 @@ public class AuctionController {
 //                .doOnNext(dto::setCategory)
 //                .thenReturn(dto);
 //    }
+
+    @GetMapping("/paged")
+    @Operation(summary = "Lister les enchères paginées")
+    public Mono<ResponseEntity<PageResponse<Auction>>> getPagedAuctions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
+
+        return auctionService.getPagedAuctions(pageable)
+                .map(ResponseEntity::ok);
+    }
+
+    @GetMapping("/by-status")
+    @Operation(summary = "Lister les enchères par statut avec pagination")
+    public Mono<ResponseEntity<PageResponse<Auction>>> getAuctionsByStatus(
+            @RequestParam AuctionStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
+        return auctionService.getAuctionsByStatus(status, pageable)
+                .map(ResponseEntity::ok);
+    }
+
+
+    @GetMapping("/by-category")
+    @Operation(summary = "Lister les enchères par catégorie avec pagination")
+    public Mono<ResponseEntity<PageResponse<Auction>>> getAuctionsByCategory(
+            @RequestParam UUID categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
+        return auctionService.getAuctionsByCategory(categoryId, pageable)
+                .map(ResponseEntity::ok);
+    }
+
 
 }

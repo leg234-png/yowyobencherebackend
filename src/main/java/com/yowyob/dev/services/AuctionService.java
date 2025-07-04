@@ -4,6 +4,7 @@ package com.yowyob.dev.services;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yowyob.dev.dto.requestDTO.AuctionDTO;
+import com.yowyob.dev.dto.responseDTO.PageResponse;
 import com.yowyob.dev.enumeration.AuctionStatus;
 import com.yowyob.dev.exceptions.NotFoundException;
 import com.yowyob.dev.mapper.AuctionMapper;
@@ -301,34 +302,6 @@ public class AuctionService {
                 .switchIfEmpty(Mono.error(new NotFoundException("Authentication required")));
     }
 
-//    public void testAgencyExistsDirect() {
-//        String testUrl = "http://157.90.26.3:8032/api/agencies/ae961770-2673-45f6-b3a1-744c2c5de6ed";
-//
-//        WebClient client = WebClient.builder()
-//                .clientConnector(new ReactorClientHttpConnector(
-//                        HttpClient.create()
-//                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
-//                                .doOnConnected(conn -> {
-//                                    conn.addHandlerLast(new ReadTimeoutHandler(3, TimeUnit.SECONDS));
-//                                    conn.addHandlerLast(new WriteTimeoutHandler(3, TimeUnit.SECONDS));
-//                                })))
-//                .build();
-//
-//        String response = null;
-//        try {
-//            response = client.get()
-//                    .uri(testUrl)
-//                    .retrieve()
-//                    .bodyToMono(String.class)
-//                    .doOnSuccess(r -> System.out.println("✅ Réponse dans doOnSuccess : " + r))
-//                    .block();
-//            System.out.println("🟢 Réponse après block() : " + response);
-//        } catch (Exception e) {
-//            System.err.println("❌ Erreur attrapée : " + e.getClass().getSimpleName() + " - " + e.getMessage());
-//            e.printStackTrace();
-//        }
-//
-//    }
 
     public Mono<Boolean> testAgencyExistsDirect(String agencyId) {
         String url = userServiceBaseUrl + "/agencies/" + agencyId;
@@ -367,5 +340,60 @@ public class AuctionService {
                 .map(ImageUrl::getUrl)
                 .collectList();
     }
+
+    public Mono<PageResponse<Auction>> getPagedAuctions(Pageable pageable) {
+        long offset = pageable.getOffset();
+        int size = pageable.getPageSize();
+
+        Flux<Auction> auctions = auctionRepository.findAllAuctionsPaged(size, offset);
+        Mono<Long> total = auctionRepository.countAllAuctions();
+
+        return Mono.zip(auctions.collectList(), total)
+                .map(tuple -> new PageResponse<>(
+                        tuple.getT1(),
+                        tuple.getT2(),
+                        pageable.getPageNumber(),
+                        pageable.getPageSize()
+                ));
+    }
+
+    public Mono<PageResponse<Auction>> getAuctionsByStatus(AuctionStatus status, Pageable pageable) {
+        long offset = pageable.getOffset();
+        int size = pageable.getPageSize();
+
+        Flux<Auction> auctions = auctionRepository.findByStatus(status)
+                .skip(offset)
+                .take(size);
+
+        Mono<Long> total = auctionRepository.countByStatus(status);
+
+        return Mono.zip(auctions.collectList(), total)
+                .map(tuple -> new PageResponse<>(
+                        tuple.getT1(),
+                        tuple.getT2(),
+                        pageable.getPageNumber(),
+                        pageable.getPageSize()
+                ));
+    }
+
+    public Mono<PageResponse<Auction>> getAuctionsByCategory(UUID categoryId, Pageable pageable) {
+        long offset = pageable.getOffset();
+        int size = pageable.getPageSize();
+
+        Flux<Auction> auctions = auctionRepository.findByCategoryId(categoryId)
+                .skip(offset)
+                .take(size);
+
+        Mono<Long> total = auctionRepository.countByCategoryId(categoryId);
+
+        return Mono.zip(auctions.collectList(), total)
+                .map(tuple -> new PageResponse<>(
+                        tuple.getT1(),
+                        tuple.getT2(),
+                        pageable.getPageNumber(),
+                        pageable.getPageSize()
+                ));
+    }
+
 
 }

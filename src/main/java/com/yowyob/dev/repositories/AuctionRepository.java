@@ -18,6 +18,9 @@ public interface AuctionRepository extends R2dbcRepository<Auction, UUID> {
 
     Flux<Auction> findByStatus(AuctionStatus status);
     Flux<Auction> findByCategoryId(UUID categoryId);
+    Mono<Long> countByStatus(AuctionStatus status);
+    Mono<Long> countByCategoryId(UUID categoryId);
+
     Flux<Auction> findByEndDateBeforeAndStatus(LocalDateTime now, AuctionStatus auctionStatus);
     Flux<Auction> findByAgencyId(UUID agencyId);
 
@@ -31,11 +34,15 @@ public interface AuctionRepository extends R2dbcRepository<Auction, UUID> {
     @Query("SELECT * FROM auction WHERE status = :status AND end_date BETWEEN :startTime AND :endTime ORDER BY end_date ASC LIMIT :limit OFFSET :offset")
     Flux<Auction> findEndingSoonAuctions(AuctionStatus status, LocalDateTime startTime, LocalDateTime endTime, int limit, long offset);
 
+    @Query("SELECT * FROM auction ORDER BY end_date ASC LIMIT :limit OFFSET :offset")
+    Flux<Auction> findAllAuctionsPaged(int limit, long offset);
+
+
     @Query("SELECT COUNT(id) FROM auction WHERE status = :status AND end_date BETWEEN :startTime AND :endTime")
     Mono<Long> countEndingSoonAuctions(AuctionStatus status, LocalDateTime startTime, LocalDateTime endTime);
 
-    // Il n'y a pas d'équivalent direct pour "in elements()". Il faut une approche différente.
-    // Soit en dénormalisant (stocker les participants dans un champ texte/JSON), soit avec une table de jointure.
-    // Pour l'instant, on va supposer une table de jointure et écrire une requête plus complexe si nécessaire.
-    // Pour simplifier, nous allons charger les participants via le BidRepository.
+    @Query("SELECT COUNT(*) FROM auction")
+    Mono<Long> countAllAuctions();
+
+
 }
