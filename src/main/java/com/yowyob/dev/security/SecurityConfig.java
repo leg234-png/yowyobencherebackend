@@ -53,7 +53,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/webjars/**",
-                                "/api-docs/**"
+                                "/api/api-docs/**"
                         ).permitAll()
                         // Tous les autres endpoints nécessitent une authentification
                         .anyExchange().authenticated()
