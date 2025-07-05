@@ -205,41 +205,85 @@ public class AuctionController {
 //    }
 
     @GetMapping("/paged")
-    @Operation(summary = "Lister les enchères paginées")
-    public Mono<ResponseEntity<PageResponse<Auction>>> getPagedAuctions(
+    @Operation(summary = "Lister les enchères paginées avec images")
+    public Mono<ResponseEntity<PageResponse<AuctionResponseDTO>>> getPagedAuctions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
 
         return auctionService.getPagedAuctions(pageable)
-                .map(ResponseEntity::ok);
+                .flatMap(pageResult -> Flux.fromIterable(pageResult.getContent())
+                        .flatMap(this::buildResponseDTO)
+                        .collectList()
+                        .map(dtoList -> {
+                            PageResponse<AuctionResponseDTO> pageResponse = new PageResponse<>(
+                                    dtoList,
+                                    pageResult.getTotalElements(),
+                                    pageResult.getPage(),
+                                    pageResult.getSize()
+                            );
+                            return ResponseEntity.ok(pageResponse);
+                        })
+                );
     }
 
+
+
     @GetMapping("/by-status")
-    @Operation(summary = "Lister les enchères par statut avec pagination")
-    public Mono<ResponseEntity<PageResponse<Auction>>> getAuctionsByStatus(
+    @Operation(summary = "Lister les enchères par statut avec images")
+    public Mono<ResponseEntity<PageResponse<AuctionResponseDTO>>> getAuctionsByStatus(
             @RequestParam AuctionStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
+
         return auctionService.getAuctionsByStatus(status, pageable)
-                .map(ResponseEntity::ok);
+                .flatMap(pageResult ->
+                        Flux.fromIterable(pageResult.getContent())
+                                .flatMap(this::buildResponseDTO)
+                                .collectList()
+                                .map(dtoList -> {
+                                    PageResponse<AuctionResponseDTO> pageResponse = new PageResponse<>(
+                                            dtoList,
+                                            pageResult.getTotalElements(),
+                                            pageResult.getPage(),
+                                            pageResult.getSize()
+                                    );
+                                    return ResponseEntity.ok(pageResponse);
+                                })
+                );
     }
 
 
+
     @GetMapping("/by-category")
-    @Operation(summary = "Lister les enchères par catégorie avec pagination")
-    public Mono<ResponseEntity<PageResponse<Auction>>> getAuctionsByCategory(
+    @Operation(summary = "Lister les enchères par catégorie avec images")
+    public Mono<ResponseEntity<PageResponse<AuctionResponseDTO>>> getAuctionsByCategory(
             @RequestParam UUID categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
+
         return auctionService.getAuctionsByCategory(categoryId, pageable)
-                .map(ResponseEntity::ok);
+                .flatMap(pageResult ->
+                        Flux.fromIterable(pageResult.getContent())
+                                .flatMap(this::buildResponseDTO)
+                                .collectList()
+                                .map(dtoList -> {
+                                    PageResponse<AuctionResponseDTO> pageResponse = new PageResponse<>(
+                                            dtoList,
+                                            pageResult.getTotalElements(),
+                                            pageResult.getPage(),
+                                            pageResult.getSize()
+                                    );
+                                    return ResponseEntity.ok(pageResponse);
+                                })
+                );
     }
+
 
 
 }
