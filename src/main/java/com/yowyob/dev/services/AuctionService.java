@@ -140,7 +140,7 @@ public class AuctionService {
     private Mono<Void> savePhotos(UUID auctionId, Flux<FilePart> imageFiles) {
         return imageFiles.flatMap(filePart -> {
                     String filename = UUID.randomUUID() + "_" + filePart.filename();
-                    Path path = Paths.get("uploads/" + filename);
+                    Path path = Paths.get("/uploads/" + filename);
 
                     return filePart.transferTo(path)
                             .then(Mono.fromCallable(() -> {
