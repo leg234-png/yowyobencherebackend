@@ -56,7 +56,6 @@ public class AuctionService {
     private final AuthService authService;
     private final AuctionMapper auctionMapper;
     private final String uploadPath;
-    private final String uploadBaseUrl;
     private final R2dbcEntityTemplate r2dbcEntityTemplate;
     @Value("${app.user-service.base-url:http://157.90.26.3:8032/api}")
     private String userServiceBaseUrl;
@@ -77,7 +76,6 @@ public class AuctionService {
         this.auctionMapper = auctionMapper;
         this.r2dbcEntityTemplate = r2dbcEntityTemplate;
         this.uploadPath = uploadPath != null ? uploadPath : "uploads/";
-        this.uploadBaseUrl = uploadBaseUrl != null ? uploadBaseUrl : "http://157.90.26.3:8031/api/uploads/";
         this.imageUrlRepository = imageUrlRepository;
 
         // Créer le répertoire d'upload s'il n'existe pas
@@ -223,23 +221,7 @@ public class AuctionService {
                 .map(tuple -> new PageImpl<>(tuple.getT1(), pageable, tuple.getT2()));
     }
 
-    /**
-     * Sauvegarde les images uploadées et retourne les URLs
-     */
-    private Flux<String> saveImages(Flux<FilePart> fileParts) {
-        return fileParts.flatMap(filePart -> {
-            String fileName = UUID.randomUUID() + "_" + filePart.filename();
-            Path targetFile = Paths.get(uploadPath).resolve(fileName);
 
-            return filePart.transferTo(targetFile)
-                    .then(Mono.just(uploadBaseUrl + fileName))
-                    .doOnSuccess(url -> log.debug("Image saved: {}", url))
-                    .onErrorResume(error -> {
-                        log.error("Error saving image: {}", error.getMessage());
-                        return Mono.empty(); // Ignorer cette image en cas d'erreur
-                    });
-        });
-    }
 
     /**
      * Met à jour une enchère (seulement par le propriétaire)
