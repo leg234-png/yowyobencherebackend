@@ -161,7 +161,7 @@ public class AuctionService {
                 .flatMap(this::enrichAuctionWithDetails);
     }
 
-    private Mono<Auction> enrichAuctionWithDetails(Auction auction) {
+    public Mono<Auction> enrichAuctionWithDetails(Auction auction) {
         Mono<List<String>> participantsMono = bidRepository
                 .findParticipantsByAuctionOrderByPriceDesc(auction.getId())
                 .collectList();

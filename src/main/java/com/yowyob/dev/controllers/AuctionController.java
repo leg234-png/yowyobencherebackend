@@ -27,6 +27,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -90,14 +91,22 @@ public class AuctionController {
     }
 
     private Mono<AuctionResponseDTO> buildResponseDTO(Auction auction) {
-        return auctionService.getImagesByAuctionId(auction.getId())
-                .map(imageUrls -> {
-                    AuctionResponseDTO responseDTO = auctionMapper.toResponseDTO(auction);
+        Mono<List<String>> imagesMono = auctionService.getImagesByAuctionId(auction.getId());
+        Mono<Auction> enrichedAuctionMono = auctionService.enrichAuctionWithDetails(auction);
+
+        return Mono.zip(enrichedAuctionMono, imagesMono)
+                .map(tuple -> {
+                    Auction enrichedAuction = tuple.getT1();
+                    List<String> imageUrls = tuple.getT2();
+
+                    AuctionResponseDTO responseDTO = auctionMapper.toResponseDTO(enrichedAuction);
                     responseDTO.setImageUrls(imageUrls);
+                    responseDTO.setParticipants(enrichedAuction.getParticipants());
+
                     return responseDTO;
                 });
-
     }
+
     private Mono<AuctionDTO> parseAuctionRequest(String request) {
         return Mono.fromCallable(() -> {
             try {
