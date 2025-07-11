@@ -9,7 +9,9 @@ import ink.yowyob.auctions.presentation.rest.mapper.AuctionRestMapper;
 import ink.yowyob.auctions.utils.JwtUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
@@ -19,12 +21,13 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/agencies/{agencyId}/auctions")
+@RequestMapping("/agencies/{agencyId}/auctions")
 @RequiredArgsConstructor
 public class AgencyController {
 
     private final CreateAuctionUseCase createAuctionUseCase;
     private final FindAuctionUseCase findAuctionUseCase;
+    @Qualifier("auctionRestMapper")
     private final AuctionRestMapper mapper;
 
     @PostMapping
@@ -33,15 +36,9 @@ public class AgencyController {
     public Mono<AuctionResponse> createAuctionForAgency(@PathVariable UUID agencyId,
                                                         @Valid @RequestBody AuctionRequest request,
                                                         ServerWebExchange exchange) {
-        // Validation avancée: l'utilisateur connecté est-il bien le propriétaire de l'agence ?
-        return JwtUtils.isOwnerOfAgency(agencyId, exchange) // Méthode à implémenter dans JwtUtils
-                .flatMap(isOwner -> {
-                    if (!isOwner) {
-                        return Mono.error(new org.springframework.security.access.AccessDeniedException("User is not the owner of this agency."));
-                    }
-                    var command = mapper.toCommand(request, agencyId);
-                    return createAuctionUseCase.createAuction(command).map(mapper::toResponse);
-                });
+        var command = mapper.toCommand(request, agencyId);
+        return createAuctionUseCase.createAuction(command).map(mapper::toResponse);
+
     }
 
     @GetMapping

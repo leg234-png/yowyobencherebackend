@@ -4,7 +4,6 @@ package ink.yowyob.auctions.application.service;
 import ink.yowyob.auctions.application.port.in.PlaceBidUseCase;
 import ink.yowyob.auctions.application.port.out.AuctionRepositoryPort;
 import ink.yowyob.auctions.application.port.out.BidRepositoryPort;
-import ink.yowyob.auctions.application.port.out.ExternalServicePort;
 import ink.yowyob.auctions.application.port.out.NotificationPort;
 import ink.yowyob.auctions.domain.enumeration.AuctionStatus;
 import ink.yowyob.auctions.domain.model.Bid;
@@ -26,7 +25,6 @@ public class BiddingService implements PlaceBidUseCase {
     private final BidRepositoryPort bidRepository;
     private final AuctionRepositoryPort auctionRepository;
     private final NotificationPort notificationPort;
-    private final ExternalServicePort externalServicePort;
 
     // Un verrou simple par enchère pour éviter les race conditions lors de l'enchérissement.
     // Pour une application multi-instance, un verrou distribué (ex: Redis) serait nécessaire.
@@ -47,17 +45,9 @@ public class BiddingService implements PlaceBidUseCase {
     private Mono<Bid> doPlaceBid(PlaceBidCommand command) {
         log.info("Attempting to place bid for auction {} by user {}", command.getAuctionId(), command.getBidderUsername());
 
-        Mono<Boolean> userExists = externalServicePort.userExists(command.getBidderUsername());
 
         return auctionRepository.findById(command.getAuctionId())
-                .zipWith(userExists)
-                .flatMap(tuple -> {
-                    var auction = tuple.getT1();
-                    var userIsValid = tuple.getT2();
-
-                    if (!userIsValid) {
-                        return Mono.error(new IllegalArgumentException("Bidder " + command.getBidderUsername() + " does not exist."));
-                    }
+                .flatMap(auction -> {
                     if (auction.getStatus() != AuctionStatus.OPEN) {
                         return Mono.error(new IllegalStateException("Auction is not open for bidding."));
                     }
@@ -78,6 +68,11 @@ public class BiddingService implements PlaceBidUseCase {
 
                     auction.setCurrentPrice(newBid.getPrice());
                     auction.setUpdatedAt(LocalDateTime.now());
+
+                    if (auction.getParticipants() == null) {
+                        auction.setParticipants(new java.util.HashSet<>());
+                    }
+                    auction.getParticipants().add(command.getBidderUsername());
                     
                     // L'opérateur transactional gère le commit/rollback
                     return bidRepository.save(newBid)

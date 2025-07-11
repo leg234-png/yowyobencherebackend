@@ -8,6 +8,7 @@ import ink.yowyob.auctions.presentation.rest.dto.CategoryResponse;
 import ink.yowyob.auctions.presentation.rest.mapper.AuctionRestMapper;
 import ink.yowyob.auctions.presentation.rest.mapper.CategoryRestMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -15,13 +16,15 @@ import reactor.core.publisher.Flux;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/categories")
+@RequestMapping("/categories")
 @RequiredArgsConstructor
 public class CategoryController {
 
     private final CategoryRepositoryPort categoryRepository; // Peut être appelé directement si pas de logique complexe
     private final FindAuctionUseCase findAuctionUseCase;
+    @Qualifier("categoryRestMapper")
     private final CategoryRestMapper categoryMapper;
+    @Qualifier("auctionRestMapper")
     private final AuctionRestMapper auctionMapper;
 
     @GetMapping

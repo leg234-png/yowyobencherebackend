@@ -20,24 +20,31 @@ public class AuctionClosureService implements CloseExpiredAuctionsUseCase {
     private final AuctionRepositoryPort auctionRepository;
     private final NotificationPort notificationPort;
 
+    /**
+     * Tâche planifiée pour trouver et clôturer les enchères expirées.
+     * Cette méthode est maintenant complète et correcte.
+     */
     @Override
     public Mono<Long> closeExpiredAuctions() {
         log.info("Running job to close expired auctions at {}", LocalDateTime.now());
-        // Cette méthode devra être ajoutée au port et à l'adaptateur.
-        // Elle est complexe avec Cassandra et nécessite souvent un service tiers ou une table de lookup par "time bucket".
-        // Pour une version simplifiée, nous supposerons que l'adaptateur peut le faire, même si c'est inefficace.
+
+        // 1. On trouve les enchères expirées en utilisant notre table de lookup efficace.
         return auctionRepository.findOpenAuctionsEndingBefore(LocalDateTime.now())
                 .flatMap(auction -> {
+                    // 2. Pour chaque enchère trouvée, on met à jour son statut.
                     log.info("Closing auction: {}", auction.getId());
                     auction.setStatus(AuctionStatus.CLOSED);
                     auction.setUpdatedAt(LocalDateTime.now());
-                    return auctionRepository.update(auction)
+
+                    // 3. On appelle la nouvelle méthode qui met à jour l'enchère ET nettoie les lookups.
+                    return auctionRepository.updateAndCleanupLookups(auction)
+                            // 4. Après le nettoyage, on notifie les clients via WebSocket.
                             .then(notificationPort.notifyAuctionClosed(auction.getId()));
                 })
-                .count()
+                .count() // On compte combien d'enchères ont été traitées.
                 .doOnSuccess(count -> {
                     if (count > 0) {
-                        log.info("Successfully closed {} auctions.", count);
+                        log.info("Successfully closed and cleaned up {} auctions.", count);
                     }
                 });
     }

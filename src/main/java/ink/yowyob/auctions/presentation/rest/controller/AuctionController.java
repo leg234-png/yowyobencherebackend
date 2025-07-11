@@ -11,6 +11,7 @@ import ink.yowyob.auctions.presentation.rest.mapper.BidRestMapper;
 import ink.yowyob.auctions.utils.JwtUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +20,15 @@ import reactor.core.publisher.Mono;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/auctions")
+@RequestMapping("/auctions")
 @RequiredArgsConstructor
 public class AuctionController {
 
     private final FindAuctionUseCase findAuctionUseCase;
     private final PlaceBidUseCase placeBidUseCase;
+    @Qualifier("auctionRestMapper")
     private final AuctionRestMapper auctionMapper;
+    @Qualifier("bidRestMapper")
     private final BidRestMapper bidMapper;
 
     @GetMapping("/{id}")

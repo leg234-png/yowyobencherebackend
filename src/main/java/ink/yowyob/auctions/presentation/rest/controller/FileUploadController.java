@@ -3,6 +3,8 @@ package ink.yowyob.auctions.presentation.rest.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +23,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/uploads")
+@RequestMapping("/uploads")
 public class FileUploadController {
 
     private final Path uploadPath;
@@ -56,5 +58,50 @@ public class FileUploadController {
         return filePart.transferTo(destinationFile)
                 .thenReturn(baseUrl + filename)
                 .doOnError(e -> log.error("Failed to upload file {}", filename, e));
+    }
+
+
+    /**
+     * Sert un fichier précédemment uploadé.
+     * Cet endpoint est appelé par le navigateur lorsqu'il rencontre une balise <img src="...">
+     * dont l'URL pointe vers notre API.
+     *
+     * @param filename Le nom du fichier à récupérer, extrait de l'URL.
+     *                 L'expression régulière `:.+` est importante pour que Spring
+     *                 capture correctement les noms de fichiers qui contiennent des points (ex: "image.jpg").
+     * @return Une ResponseEntity contenant la ressource (le fichier) si elle est trouvée,
+     *         ou une réponse 404 Not Found sinon.
+     */
+    @GetMapping("/{filename:.+}")
+    public Mono<ResponseEntity<Resource>> getFile(@PathVariable String filename) {
+        // 1. Construire le chemin complet et sécurisé vers le fichier demandé.
+        //    resolve() ajoute le nom du fichier au chemin de base (ex: /app/uploads/mon_image.png)
+        //    normalize() nettoie le chemin (ex: supprime les "../") pour éviter les attaques de type "Path Traversal".
+        Path filePath = this.uploadPath.resolve(filename).normalize();
+
+        // 2. Créer un objet Resource à partir du chemin du fichier.
+        //    FileSystemResource est une implémentation de Resource pour les fichiers sur le disque.
+        Resource resource = new FileSystemResource(filePath);
+
+        // 3. Vérifier de manière asynchrone si la ressource existe et est lisible.
+        //    On utilise Mono.fromCallable pour ne pas bloquer le thread de l'événement.
+        return Mono.fromCallable(() -> resource.exists() && resource.isReadable())
+                .flatMap(exists -> {
+                    if (exists) {
+                        // 4a. Si le fichier existe, le renvoyer avec un statut 200 OK.
+                        //     On peut essayer de deviner le type de contenu (MIME type) pour aider le navigateur,
+                        //     mais pour des images, le navigateur est souvent assez intelligent.
+                        //     Ici, on peut juste définir un type générique ou essayer de le deviner.
+                        log.debug("Serving file: {}", filename);
+                        return Mono.just(ResponseEntity.ok()
+                                .contentType(MediaType.APPLICATION_OCTET_STREAM) // Type générique pour les données binaires
+                                // Alternativement, vous pourriez utiliser une lib pour deviner le MIME type à partir du nom du fichier
+                                .body(resource));
+                    } else {
+                        // 4b. Si le fichier n'existe pas ou n'est pas lisible, renvoyer une erreur 404.
+                        log.warn("Requested file not found or not readable: {}", filename);
+                        return Mono.just(ResponseEntity.notFound().build());
+                    }
+                });
     }
 }

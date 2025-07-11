@@ -5,7 +5,6 @@ import ink.yowyob.auctions.application.port.in.CreateAuctionUseCase;
 import ink.yowyob.auctions.application.port.in.FindAuctionUseCase;
 import ink.yowyob.auctions.application.port.out.AuctionRepositoryPort;
 import ink.yowyob.auctions.application.port.out.CategoryRepositoryPort;
-import ink.yowyob.auctions.application.port.out.ExternalServicePort;
 import ink.yowyob.auctions.domain.enumeration.AuctionStatus;
 import ink.yowyob.auctions.domain.model.Auction;
 import lombok.RequiredArgsConstructor;
@@ -21,21 +20,16 @@ import java.util.UUID;
 public class AuctionManagementService implements CreateAuctionUseCase, FindAuctionUseCase {
 
     private final AuctionRepositoryPort auctionRepository;
-    private final ExternalServicePort externalServicePort;
     private final CategoryRepositoryPort categoryRepository;
 
     @Override
     public Mono<Auction> createAuction(CreateAuctionCommand command) {
-        // Validation métier avant la création
-        Mono<Boolean> agencyExists = externalServicePort.agencyExists(command.getAgencyId());
         Mono<Boolean> categoryExists = categoryRepository.findById(command.getCategoryId()).hasElement();
 
-        return Mono.zip(agencyExists, categoryExists)
-                .flatMap(tuple -> {
-                    if (!tuple.getT1()) {
-                        return Mono.error(new IllegalArgumentException("Agency with ID " + command.getAgencyId() + " does not exist."));
-                    }
-                    if (!tuple.getT2()) {
+        return categoryExists
+                .flatMap( exits -> {
+
+                    if (!exits) {
                         return Mono.error(new IllegalArgumentException("Category with ID " + command.getCategoryId() + " does not exist."));
                     }
 
