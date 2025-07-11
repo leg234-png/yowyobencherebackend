@@ -1,0 +1,22 @@
+//---> PATH: src/main/java/ink/yowyob/auctions/infrastructure/scheduling/AuctionScheduler.java
+package ink.yowyob.auctions.infrastructure.scheduling;
+
+import ink.yowyob.auctions.application.port.in.CloseExpiredAuctionsUseCase;
+import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+@Component
+@EnableScheduling
+@RequiredArgsConstructor
+public class AuctionScheduler {
+
+    private final CloseExpiredAuctionsUseCase closeExpiredAuctionsUseCase;
+
+    // Exécute la tâche toutes les minutes
+    @Scheduled(fixedRate = 60000)
+    public void scheduleAuctionClosure() {
+        closeExpiredAuctionsUseCase.closeExpiredAuctions().subscribe();
+    }
+}
