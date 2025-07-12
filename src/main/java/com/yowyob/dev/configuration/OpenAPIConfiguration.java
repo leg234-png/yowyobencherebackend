@@ -16,7 +16,7 @@ public class OpenAPIConfiguration {
     @Bean
     public OpenAPI defineOpenApi() {
         Server server = new Server();
-        server.setUrl("http://157.90.26.3:8031");
+        server.setUrl("http://188.245.102.186:8031");
         server.setDescription("Development");
 
         Contact myContact = new Contact();
