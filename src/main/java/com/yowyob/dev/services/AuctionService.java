@@ -165,6 +165,11 @@ public class AuctionService {
                 .flatMap(this::enrichAuctionWithDetails);
     }
 
+    public Flux<Auction> getMyAuctions(UUID id) {
+        return auctionRepository.findByAgencyId(id)
+                .flatMap(this::enrichAuctionWithDetails);
+    }
+
     public Mono<Auction> enrichAuctionWithDetails(Auction auction) {
         Mono<List<String>> participantsMono = bidRepository
                 .findParticipantsByAuctionOrderByPriceDesc(auction.getId())

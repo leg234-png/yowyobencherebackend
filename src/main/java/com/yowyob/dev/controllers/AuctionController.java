@@ -163,18 +163,13 @@ public class AuctionController {
                 });
     }
 
-    // Endpoint protégé - authentification requise
-    @GetMapping("/my-auctions")
-    public Flux<AuctionResponseDTO> getMyAuctions() {
-        return JwtUtils.getCurrentUserInfo()
-                .doOnNext(userInfo -> log.info("User {} retrieving their auctions", userInfo.getUsername()))
-                .flatMapMany(userInfo -> {
-                    // TODO: Adapter selon votre logique - ici on suppose que l'agencyId correspond à l'userId
-                    UUID agencyId = UUID.fromString(userInfo.getUserId());
-                    return auctionService.getAuctionsByAgencyId(agencyId);
-                })
+    @GetMapping("/my-auctions/{id}")
+    public Flux<AuctionResponseDTO> getMyAuctions(@PathVariable("id") UUID userId) {
+        log.info("User {} retrieving their own auctions", userId);
+        return auctionService.getMyAuctions(userId)
                 .flatMap(this::buildResponseDTO);
     }
+
 
     // Endpoint protégé - seul le propriétaire ou un admin peut modifier
     @PutMapping("/{id}")
