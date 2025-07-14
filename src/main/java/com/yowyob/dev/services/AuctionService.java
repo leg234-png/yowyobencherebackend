@@ -96,6 +96,10 @@ public class AuctionService {
                     Auction auction = auctionMapper.toAuction(auctionDTO);
                     auction.setId(UUID.randomUUID());
                     auction.setStatus(AuctionStatus.OPEN);
+                    // TÂCHE : Initialiser le prix actuel avec le prix de départ
+                    auction.setCurrentPrice(auctionDTO.getStartingPrice());
+                    auction.setPaymentStatus("UNPAID"); // Initialisation du statut de paiement
+
                     auction.setCreatedAt(LocalDateTime.now());
                     auction.setUpdatedAt(LocalDateTime.now());
 
@@ -377,5 +381,14 @@ public class AuctionService {
                 ));
     }
 
+    public Flux<Auction> getParticipatedAuctions(String username) {
+        log.info("Fetching participated auctions for user {}", username);
+        return auctionRepository.findAuctionsByParticipantUsername(username);
+    }
+
+    public Flux<Auction> getWonAuctions(String username) {
+        log.info("Fetching won auctions for user {}", username);
+        return auctionRepository.findWonAuctionsByUsername(username);
+    }
 
 }

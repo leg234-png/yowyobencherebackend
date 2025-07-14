@@ -14,6 +14,8 @@ import com.yowyob.dev.repositories.CategoryRepository;
 import com.yowyob.dev.services.AuctionService;
 import com.yowyob.dev.utils.JwtUtils;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
@@ -63,16 +65,6 @@ public class AuctionController {
                 });
     }
 
-    @GetMapping("/test-uuid")
-    public Mono<Map<String, Object>> testUuid() {
-        Map<String, Object> testData = new HashMap<>();
-        testData.put("testId", UUID.randomUUID());
-        testData.put("anotherUuid", UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
-        testData.put("currentTime", LocalDateTime.now());
-        testData.put("message", "Test UUID serialization");
-
-        return Mono.just(testData);
-    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
@@ -293,6 +285,30 @@ public class AuctionController {
                 );
     }
 
+    @GetMapping("/participated")
+    @Operation(summary = "Lister les enchères auxquelles je participe")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste des enchères participées"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié")
+    })
+    public Flux<AuctionResponseDTO> getMyParticipatedAuctions() {
+        return JwtUtils.getCurrentUsername()
+                .doOnNext(username -> log.info("User {} retrieving participated auctions", username))
+                .flatMapMany(auctionService::getParticipatedAuctions)
+                .flatMap(this::buildResponseDTO);
+    }
 
+    @GetMapping("/won")
+    @Operation(summary = "Lister les enchères que j'ai gagnées")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Liste des enchères gagnées"),
+            @ApiResponse(responseCode = "401", description = "Non authentifié")
+    })
+    public Flux<AuctionResponseDTO> getMyWonAuctions() {
+        return JwtUtils.getCurrentUsername()
+                .doOnNext(username -> log.info("User {} retrieving won auctions", username))
+                .flatMapMany(auctionService::getWonAuctions)
+                .flatMap(this::buildResponseDTO);
+    }
 
 }

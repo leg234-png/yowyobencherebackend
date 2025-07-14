@@ -38,6 +38,11 @@ public class Auction {
     @Column("end_date")
     private LocalDateTime endDate;
     private AuctionStatus status;
+
+    // NOUVEAU CHAMP
+    @Column("payment_status")
+    private String paymentStatus; // Ex: UNPAID, PAID
+
     @Column("agency_id")
     private UUID agencyId;
     @Column("category_id")

@@ -44,5 +44,23 @@ public interface AuctionRepository extends R2dbcRepository<Auction, UUID> {
     @Query("SELECT COUNT(*) FROM auction")
     Mono<Long> countAllAuctions();
 
+    @Query("SELECT DISTINCT a.* FROM auction a JOIN bid b ON a.id = b.auction_id WHERE b.username = :username")
+    Flux<Auction> findAuctionsByParticipantUsername(String username);
 
+    @Query("""
+        SELECT a.* FROM auction a
+        JOIN (
+            -- Trouve le prix maximum pour chaque enchère terminée
+            SELECT auction_id, MAX(price) as max_price
+            FROM bid
+            GROUP BY auction_id
+        ) b_max ON a.id = b_max.auction_id
+        -- Jointure avec la table des offres pour trouver le gagnant
+        JOIN bid b_winner ON b_winner.auction_id = a.id AND b_winner.price = b_max.max_price
+        WHERE a.status = 'CLOSE' AND b_winner.username = :username
+    """)
+    Flux<Auction> findWonAuctionsByUsername(String username);
+
+
+    Mono<Long> countByAgencyId(UUID agencyId);
 }

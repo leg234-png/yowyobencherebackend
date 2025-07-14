@@ -1,0 +1,3875 @@
+Project Context From: /home/nathan/Documents/devWeb/yowyobencherebackend
+Generated On: lun. 14 juil. 2025 08:39:41 WAT
+===============================================
+Ignored Directory Patterns: .* node_modules vendor build dist target __pycache__ .next cache target venv storage
+Ignored File Patterns: *.log *.jar *.pdf *.png *.jpg *.class *.sqlite *.csv project_context.txt package-lock.json yarn.lock composer.lock *.ico pnpm-lock.yaml
+===============================================
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/Dockerfile
+
+FROM maven:3.8-openjdk-17-slim AS build
+COPY . /app
+WORKDIR /app
+RUN mvn clean install -DskipTests
+FROM eclipse-temurin:17-jre-alpine
+COPY --from=build /app/target/*.jar /app/my-spring-boot-app.jar
+WORKDIR /app
+EXPOSE 8031
+CMD ["java", "-jar", "my-spring-boot-app.jar"]
+// END OF FILE: Dockerfile
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/.gitattributes
+
+/mvnw text eol=lf
+*.cmd text eol=crlf
+// END OF FILE: .gitattributes
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/.gitignore
+
+HELP.md
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+
+# ========== Fichiers spécifiques aux IDEs Java ==========
+
+# Eclipse
+.settings/
+
+# IntelliJ IDEA
+.idea/
+out/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+
+
+# ========== Fichiers générés par la compilation Java ==========
+bin/
+*.class
+
+# ========== Fichiers système ==========
+.DS_Store
+Thumbs.db
+
+
+
+# ========== Fichiers de logs et caches ==========
+*.log
+// END OF FILE: .gitignore
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/mvnw
+
+#!/bin/sh
+# ----------------------------------------------------------------------------
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+# ----------------------------------------------------------------------------
+
+# ----------------------------------------------------------------------------
+# Apache Maven Wrapper startup batch script, version 3.3.2
+#
+# Optional ENV vars
+# -----------------
+#   JAVA_HOME - location of a JDK home dir, required when download maven via java source
+#   MVNW_REPOURL - repo url base for downloading maven distribution
+#   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
+#   MVNW_VERBOSE - true: enable verbose log; debug: trace the mvnw script; others: silence the output
+# ----------------------------------------------------------------------------
+
+set -euf
+[ "${MVNW_VERBOSE-}" != debug ] || set -x
+
+# OS specific support.
+native_path() { printf %s\\n "$1"; }
+case "$(uname)" in
+CYGWIN* | MINGW*)
+  [ -z "${JAVA_HOME-}" ] || JAVA_HOME="$(cygpath --unix "$JAVA_HOME")"
+  native_path() { cygpath --path --windows "$1"; }
+  ;;
+esac
+
+# set JAVACMD and JAVACCMD
+set_java_home() {
+  # For Cygwin and MinGW, ensure paths are in Unix format before anything is touched
+  if [ -n "${JAVA_HOME-}" ]; then
+    if [ -x "$JAVA_HOME/jre/sh/java" ]; then
+      # IBM's JDK on AIX uses strange locations for the executables
+      JAVACMD="$JAVA_HOME/jre/sh/java"
+      JAVACCMD="$JAVA_HOME/jre/sh/javac"
+    else
+      JAVACMD="$JAVA_HOME/bin/java"
+      JAVACCMD="$JAVA_HOME/bin/javac"
+
+      if [ ! -x "$JAVACMD" ] || [ ! -x "$JAVACCMD" ]; then
+        echo "The JAVA_HOME environment variable is not defined correctly, so mvnw cannot run." >&2
+        echo "JAVA_HOME is set to \"$JAVA_HOME\", but \"\$JAVA_HOME/bin/java\" or \"\$JAVA_HOME/bin/javac\" does not exist." >&2
+        return 1
+      fi
+    fi
+  else
+    JAVACMD="$(
+      'set' +e
+      'unset' -f command 2>/dev/null
+      'command' -v java
+    )" || :
+    JAVACCMD="$(
+      'set' +e
+      'unset' -f command 2>/dev/null
+      'command' -v javac
+    )" || :
+
+    if [ ! -x "${JAVACMD-}" ] || [ ! -x "${JAVACCMD-}" ]; then
+      echo "The java/javac command does not exist in PATH nor is JAVA_HOME set, so mvnw cannot run." >&2
+      return 1
+    fi
+  fi
+}
+
+# hash string like Java String::hashCode
+hash_string() {
+  str="${1:-}" h=0
+  while [ -n "$str" ]; do
+    char="${str%"${str#?}"}"
+    h=$(((h * 31 + $(LC_CTYPE=C printf %d "'$char")) % 4294967296))
+    str="${str#?}"
+  done
+  printf %x\\n $h
+}
+
+verbose() { :; }
+[ "${MVNW_VERBOSE-}" != true ] || verbose() { printf %s\\n "${1-}"; }
+
+die() {
+  printf %s\\n "$1" >&2
+  exit 1
+}
+
+trim() {
+  # MWRAPPER-139:
+  #   Trims trailing and leading whitespace, carriage returns, tabs, and linefeeds.
+  #   Needed for removing poorly interpreted newline sequences when running in more
+  #   exotic environments such as mingw bash on Windows.
+  printf "%s" "${1}" | tr -d '[:space:]'
+}
+
+# parse distributionUrl and optional distributionSha256Sum, requires .mvn/wrapper/maven-wrapper.properties
+while IFS="=" read -r key value; do
+  case "${key-}" in
+  distributionUrl) distributionUrl=$(trim "${value-}") ;;
+  distributionSha256Sum) distributionSha256Sum=$(trim "${value-}") ;;
+  esac
+done <"${0%/*}/.mvn/wrapper/maven-wrapper.properties"
+[ -n "${distributionUrl-}" ] || die "cannot read distributionUrl property in ${0%/*}/.mvn/wrapper/maven-wrapper.properties"
+
+case "${distributionUrl##*/}" in
+maven-mvnd-*bin.*)
+  MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/
+  case "${PROCESSOR_ARCHITECTURE-}${PROCESSOR_ARCHITEW6432-}:$(uname -a)" in
+  *AMD64:CYGWIN* | *AMD64:MINGW*) distributionPlatform=windows-amd64 ;;
+  :Darwin*x86_64) distributionPlatform=darwin-amd64 ;;
+  :Darwin*arm64) distributionPlatform=darwin-aarch64 ;;
+  :Linux*x86_64*) distributionPlatform=linux-amd64 ;;
+  *)
+    echo "Cannot detect native platform for mvnd on $(uname)-$(uname -m), use pure java version" >&2
+    distributionPlatform=linux-amd64
+    ;;
+  esac
+  distributionUrl="${distributionUrl%-bin.*}-$distributionPlatform.zip"
+  ;;
+maven-mvnd-*) MVN_CMD=mvnd.sh _MVNW_REPO_PATTERN=/maven/mvnd/ ;;
+*) MVN_CMD="mvn${0##*/mvnw}" _MVNW_REPO_PATTERN=/org/apache/maven/ ;;
+esac
+
+# apply MVNW_REPOURL and calculate MAVEN_HOME
+# maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+[ -z "${MVNW_REPOURL-}" ] || distributionUrl="$MVNW_REPOURL$_MVNW_REPO_PATTERN${distributionUrl#*"$_MVNW_REPO_PATTERN"}"
+distributionUrlName="${distributionUrl##*/}"
+distributionUrlNameMain="${distributionUrlName%.*}"
+distributionUrlNameMain="${distributionUrlNameMain%-bin}"
+MAVEN_USER_HOME="${MAVEN_USER_HOME:-${HOME}/.m2}"
+MAVEN_HOME="${MAVEN_USER_HOME}/wrapper/dists/${distributionUrlNameMain-}/$(hash_string "$distributionUrl")"
+
+exec_maven() {
+  unset MVNW_VERBOSE MVNW_USERNAME MVNW_PASSWORD MVNW_REPOURL || :
+  exec "$MAVEN_HOME/bin/$MVN_CMD" "$@" || die "cannot exec $MAVEN_HOME/bin/$MVN_CMD"
+}
+
+if [ -d "$MAVEN_HOME" ]; then
+  verbose "found existing MAVEN_HOME at $MAVEN_HOME"
+  exec_maven "$@"
+fi
+
+case "${distributionUrl-}" in
+*?-bin.zip | *?maven-mvnd-?*-?*.zip) ;;
+*) die "distributionUrl is not valid, must match *-bin.zip or maven-mvnd-*.zip, but found '${distributionUrl-}'" ;;
+esac
+
+# prepare tmp dir
+if TMP_DOWNLOAD_DIR="$(mktemp -d)" && [ -d "$TMP_DOWNLOAD_DIR" ]; then
+  clean() { rm -rf -- "$TMP_DOWNLOAD_DIR"; }
+  trap clean HUP INT TERM EXIT
+else
+  die "cannot create temp dir"
+fi
+
+mkdir -p -- "${MAVEN_HOME%/*}"
+
+# Download and Install Apache Maven
+verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
+verbose "Downloading from: $distributionUrl"
+verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
+
+# select .zip or .tar.gz
+if ! command -v unzip >/dev/null; then
+  distributionUrl="${distributionUrl%.zip}.tar.gz"
+  distributionUrlName="${distributionUrl##*/}"
+fi
+
+# verbose opt
+__MVNW_QUIET_WGET=--quiet __MVNW_QUIET_CURL=--silent __MVNW_QUIET_UNZIP=-q __MVNW_QUIET_TAR=''
+[ "${MVNW_VERBOSE-}" != true ] || __MVNW_QUIET_WGET='' __MVNW_QUIET_CURL='' __MVNW_QUIET_UNZIP='' __MVNW_QUIET_TAR=v
+
+# normalize http auth
+case "${MVNW_PASSWORD:+has-password}" in
+'') MVNW_USERNAME='' MVNW_PASSWORD='' ;;
+has-password) [ -n "${MVNW_USERNAME-}" ] || MVNW_USERNAME='' MVNW_PASSWORD='' ;;
+esac
+
+if [ -z "${MVNW_USERNAME-}" ] && command -v wget >/dev/null; then
+  verbose "Found wget ... using wget"
+  wget ${__MVNW_QUIET_WGET:+"$__MVNW_QUIET_WGET"} "$distributionUrl" -O "$TMP_DOWNLOAD_DIR/$distributionUrlName" || die "wget: Failed to fetch $distributionUrl"
+elif [ -z "${MVNW_USERNAME-}" ] && command -v curl >/dev/null; then
+  verbose "Found curl ... using curl"
+  curl ${__MVNW_QUIET_CURL:+"$__MVNW_QUIET_CURL"} -f -L -o "$TMP_DOWNLOAD_DIR/$distributionUrlName" "$distributionUrl" || die "curl: Failed to fetch $distributionUrl"
+elif set_java_home; then
+  verbose "Falling back to use Java to download"
+  javaSource="$TMP_DOWNLOAD_DIR/Downloader.java"
+  targetZip="$TMP_DOWNLOAD_DIR/$distributionUrlName"
+  cat >"$javaSource" <<-END
+	public class Downloader extends java.net.Authenticator
+	{
+	  protected java.net.PasswordAuthentication getPasswordAuthentication()
+	  {
+	    return new java.net.PasswordAuthentication( System.getenv( "MVNW_USERNAME" ), System.getenv( "MVNW_PASSWORD" ).toCharArray() );
+	  }
+	  public static void main( String[] args ) throws Exception
+	  {
+	    setDefault( new Downloader() );
+	    java.nio.file.Files.copy( java.net.URI.create( args[0] ).toURL().openStream(), java.nio.file.Paths.get( args[1] ).toAbsolutePath().normalize() );
+	  }
+	}
+	END
+  # For Cygwin/MinGW, switch paths to Windows format before running javac and java
+  verbose " - Compiling Downloader.java ..."
+  "$(native_path "$JAVACCMD")" "$(native_path "$javaSource")" || die "Failed to compile Downloader.java"
+  verbose " - Running Downloader.java ..."
+  "$(native_path "$JAVACMD")" -cp "$(native_path "$TMP_DOWNLOAD_DIR")" Downloader "$distributionUrl" "$(native_path "$targetZip")"
+fi
+
+# If specified, validate the SHA-256 sum of the Maven distribution zip file
+if [ -n "${distributionSha256Sum-}" ]; then
+  distributionSha256Result=false
+  if [ "$MVN_CMD" = mvnd.sh ]; then
+    echo "Checksum validation is not supported for maven-mvnd." >&2
+    echo "Please disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
+    exit 1
+  elif command -v sha256sum >/dev/null; then
+    if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | sha256sum -c >/dev/null 2>&1; then
+      distributionSha256Result=true
+    fi
+  elif command -v shasum >/dev/null; then
+    if echo "$distributionSha256Sum  $TMP_DOWNLOAD_DIR/$distributionUrlName" | shasum -a 256 -c >/dev/null 2>&1; then
+      distributionSha256Result=true
+    fi
+  else
+    echo "Checksum validation was requested but neither 'sha256sum' or 'shasum' are available." >&2
+    echo "Please install either command, or disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties." >&2
+    exit 1
+  fi
+  if [ $distributionSha256Result = false ]; then
+    echo "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised." >&2
+    echo "If you updated your Maven version, you need to update the specified distributionSha256Sum property." >&2
+    exit 1
+  fi
+fi
+
+# unzip and move
+if command -v unzip >/dev/null; then
+  unzip ${__MVNW_QUIET_UNZIP:+"$__MVNW_QUIET_UNZIP"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -d "$TMP_DOWNLOAD_DIR" || die "failed to unzip"
+else
+  tar xzf${__MVNW_QUIET_TAR:+"$__MVNW_QUIET_TAR"} "$TMP_DOWNLOAD_DIR/$distributionUrlName" -C "$TMP_DOWNLOAD_DIR" || die "failed to untar"
+fi
+printf %s\\n "$distributionUrl" >"$TMP_DOWNLOAD_DIR/$distributionUrlNameMain/mvnw.url"
+mv -- "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain" "$MAVEN_HOME" || [ -d "$MAVEN_HOME" ] || die "fail to move MAVEN_HOME"
+
+clean || :
+exec_maven "$@"
+// END OF FILE: mvnw
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/mvnw.cmd
+
+<# : batch portion
+@REM ----------------------------------------------------------------------------
+@REM Licensed to the Apache Software Foundation (ASF) under one
+@REM or more contributor license agreements.  See the NOTICE file
+@REM distributed with this work for additional information
+@REM regarding copyright ownership.  The ASF licenses this file
+@REM to you under the Apache License, Version 2.0 (the
+@REM "License"); you may not use this file except in compliance
+@REM with the License.  You may obtain a copy of the License at
+@REM
+@REM    http://www.apache.org/licenses/LICENSE-2.0
+@REM
+@REM Unless required by applicable law or agreed to in writing,
+@REM software distributed under the License is distributed on an
+@REM "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+@REM KIND, either express or implied.  See the License for the
+@REM specific language governing permissions and limitations
+@REM under the License.
+@REM ----------------------------------------------------------------------------
+
+@REM ----------------------------------------------------------------------------
+@REM Apache Maven Wrapper startup batch script, version 3.3.2
+@REM
+@REM Optional ENV vars
+@REM   MVNW_REPOURL - repo url base for downloading maven distribution
+@REM   MVNW_USERNAME/MVNW_PASSWORD - user and password for downloading maven
+@REM   MVNW_VERBOSE - true: enable verbose log; others: silence the output
+@REM ----------------------------------------------------------------------------
+
+@IF "%__MVNW_ARG0_NAME__%"=="" (SET __MVNW_ARG0_NAME__=%~nx0)
+@SET __MVNW_CMD__=
+@SET __MVNW_ERROR__=
+@SET __MVNW_PSMODULEP_SAVE=%PSModulePath%
+@SET PSModulePath=
+@FOR /F "usebackq tokens=1* delims==" %%A IN (`powershell -noprofile "& {$scriptDir='%~dp0'; $script='%__MVNW_ARG0_NAME__%'; icm -ScriptBlock ([Scriptblock]::Create((Get-Content -Raw '%~f0'))) -NoNewScope}"`) DO @(
+  IF "%%A"=="MVN_CMD" (set __MVNW_CMD__=%%B) ELSE IF "%%B"=="" (echo %%A) ELSE (echo %%A=%%B)
+)
+@SET PSModulePath=%__MVNW_PSMODULEP_SAVE%
+@SET __MVNW_PSMODULEP_SAVE=
+@SET __MVNW_ARG0_NAME__=
+@SET MVNW_USERNAME=
+@SET MVNW_PASSWORD=
+@IF NOT "%__MVNW_CMD__%"=="" (%__MVNW_CMD__% %*)
+@echo Cannot start maven from wrapper >&2 && exit /b 1
+@GOTO :EOF
+: end batch / begin powershell #>
+
+$ErrorActionPreference = "Stop"
+if ($env:MVNW_VERBOSE -eq "true") {
+  $VerbosePreference = "Continue"
+}
+
+# calculate distributionUrl, requires .mvn/wrapper/maven-wrapper.properties
+$distributionUrl = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionUrl
+if (!$distributionUrl) {
+  Write-Error "cannot read distributionUrl property in $scriptDir/.mvn/wrapper/maven-wrapper.properties"
+}
+
+switch -wildcard -casesensitive ( $($distributionUrl -replace '^.*/','') ) {
+  "maven-mvnd-*" {
+    $USE_MVND = $true
+    $distributionUrl = $distributionUrl -replace '-bin\.[^.]*$',"-windows-amd64.zip"
+    $MVN_CMD = "mvnd.cmd"
+    break
+  }
+  default {
+    $USE_MVND = $false
+    $MVN_CMD = $script -replace '^mvnw','mvn'
+    break
+  }
+}
+
+# apply MVNW_REPOURL and calculate MAVEN_HOME
+# maven home pattern: ~/.m2/wrapper/dists/{apache-maven-<version>,maven-mvnd-<version>-<platform>}/<hash>
+if ($env:MVNW_REPOURL) {
+  $MVNW_REPO_PATTERN = if ($USE_MVND) { "/org/apache/maven/" } else { "/maven/mvnd/" }
+  $distributionUrl = "$env:MVNW_REPOURL$MVNW_REPO_PATTERN$($distributionUrl -replace '^.*'+$MVNW_REPO_PATTERN,'')"
+}
+$distributionUrlName = $distributionUrl -replace '^.*/',''
+$distributionUrlNameMain = $distributionUrlName -replace '\.[^.]*$','' -replace '-bin$',''
+$MAVEN_HOME_PARENT = "$HOME/.m2/wrapper/dists/$distributionUrlNameMain"
+if ($env:MAVEN_USER_HOME) {
+  $MAVEN_HOME_PARENT = "$env:MAVEN_USER_HOME/wrapper/dists/$distributionUrlNameMain"
+}
+$MAVEN_HOME_NAME = ([System.Security.Cryptography.MD5]::Create().ComputeHash([byte[]][char[]]$distributionUrl) | ForEach-Object {$_.ToString("x2")}) -join ''
+$MAVEN_HOME = "$MAVEN_HOME_PARENT/$MAVEN_HOME_NAME"
+
+if (Test-Path -Path "$MAVEN_HOME" -PathType Container) {
+  Write-Verbose "found existing MAVEN_HOME at $MAVEN_HOME"
+  Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"
+  exit $?
+}
+
+if (! $distributionUrlNameMain -or ($distributionUrlName -eq $distributionUrlNameMain)) {
+  Write-Error "distributionUrl is not valid, must end with *-bin.zip, but found $distributionUrl"
+}
+
+# prepare tmp dir
+$TMP_DOWNLOAD_DIR_HOLDER = New-TemporaryFile
+$TMP_DOWNLOAD_DIR = New-Item -Itemtype Directory -Path "$TMP_DOWNLOAD_DIR_HOLDER.dir"
+$TMP_DOWNLOAD_DIR_HOLDER.Delete() | Out-Null
+trap {
+  if ($TMP_DOWNLOAD_DIR.Exists) {
+    try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
+    catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
+  }
+}
+
+New-Item -Itemtype Directory -Path "$MAVEN_HOME_PARENT" -Force | Out-Null
+
+# Download and Install Apache Maven
+Write-Verbose "Couldn't find MAVEN_HOME, downloading and installing it ..."
+Write-Verbose "Downloading from: $distributionUrl"
+Write-Verbose "Downloading to: $TMP_DOWNLOAD_DIR/$distributionUrlName"
+
+$webclient = New-Object System.Net.WebClient
+if ($env:MVNW_USERNAME -and $env:MVNW_PASSWORD) {
+  $webclient.Credentials = New-Object System.Net.NetworkCredential($env:MVNW_USERNAME, $env:MVNW_PASSWORD)
+}
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$webclient.DownloadFile($distributionUrl, "$TMP_DOWNLOAD_DIR/$distributionUrlName") | Out-Null
+
+# If specified, validate the SHA-256 sum of the Maven distribution zip file
+$distributionSha256Sum = (Get-Content -Raw "$scriptDir/.mvn/wrapper/maven-wrapper.properties" | ConvertFrom-StringData).distributionSha256Sum
+if ($distributionSha256Sum) {
+  if ($USE_MVND) {
+    Write-Error "Checksum validation is not supported for maven-mvnd. `nPlease disable validation by removing 'distributionSha256Sum' from your maven-wrapper.properties."
+  }
+  Import-Module $PSHOME\Modules\Microsoft.PowerShell.Utility -Function Get-FileHash
+  if ((Get-FileHash "$TMP_DOWNLOAD_DIR/$distributionUrlName" -Algorithm SHA256).Hash.ToLower() -ne $distributionSha256Sum) {
+    Write-Error "Error: Failed to validate Maven distribution SHA-256, your Maven distribution might be compromised. If you updated your Maven version, you need to update the specified distributionSha256Sum property."
+  }
+}
+
+# unzip and move
+Expand-Archive "$TMP_DOWNLOAD_DIR/$distributionUrlName" -DestinationPath "$TMP_DOWNLOAD_DIR" | Out-Null
+Rename-Item -Path "$TMP_DOWNLOAD_DIR/$distributionUrlNameMain" -NewName $MAVEN_HOME_NAME | Out-Null
+try {
+  Move-Item -Path "$TMP_DOWNLOAD_DIR/$MAVEN_HOME_NAME" -Destination $MAVEN_HOME_PARENT | Out-Null
+} catch {
+  if (! (Test-Path -Path "$MAVEN_HOME" -PathType Container)) {
+    Write-Error "fail to move MAVEN_HOME"
+  }
+} finally {
+  try { Remove-Item $TMP_DOWNLOAD_DIR -Recurse -Force | Out-Null }
+  catch { Write-Warning "Cannot remove $TMP_DOWNLOAD_DIR" }
+}
+
+Write-Output "MVN_CMD=$MAVEN_HOME/bin/$MVN_CMD"
+// END OF FILE: mvnw.cmd
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/pom.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.3.2</version>
+		<relativePath/>
+	</parent>
+	<groupId>com.yowyob</groupId>
+	<artifactId>dev</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>yowyob-enchere-backend-reactive</name>
+	<description>Reactive Auction Backend for Yowyob</description>
+	<properties>
+		<java.version>17</java.version>
+		<org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
+	</properties>
+	<dependencies>
+		<!-- ****** STACK RÉACTIVE ****** -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-r2dbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.asyncer</groupId>
+			<artifactId>r2dbc-mysql</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- ****** AUTRES DÉPENDANCES ****** -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+			<version>2.2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+			<version>${org.mapstruct.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+		<!-- Flyway a besoin du driver JDBC classique pour fonctionner, même dans un projet R2DBC -->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
+		</dependency>
+		<!-- pom.xml -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+
+		<!-- Pour la gestion des JWT -->
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.12.6</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.12.6</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.12.6</version>
+			<scope>runtime</scope>
+		</dependency>
+
+		<!-- ****** DÉPENDANCES DE TEST ****** -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<annotationProcessorPaths>
+						<path>
+							<groupId>org.mapstruct</groupId>
+							<artifactId>mapstruct-processor</artifactId>
+							<version>${org.mapstruct.version}</version>
+						</path>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+							<version>${lombok.version}</version>
+						</path>
+						<path>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok-mapstruct-binding</artifactId>
+							<version>0.2.0</version>
+						</path>
+					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>// END OF FILE: pom.xml
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/configuration/CorsGlobalConfiguration.java
+
+package com.yowyob.dev.configuration;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.cors.reactive.CorsWebFilter;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfiguration;
+
+
+import java.util.Arrays;
+import java.util.Collections;
+
+@Configuration
+public class CorsGlobalConfiguration  {
+
+    @Bean
+    public CorsWebFilter corsWebFilter() {
+        CorsConfiguration corsConfig = new CorsConfiguration();
+        corsConfig.setAllowedOriginPatterns(Arrays.asList("*"));
+        corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        corsConfig.setAllowedHeaders(Collections.singletonList("*"));
+        corsConfig.setExposedHeaders(Collections.singletonList("Authorization")); // exposer certains headers
+        corsConfig.setAllowCredentials(true); // si tu utilises des cookies ou des sessions
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+
+        return new CorsWebFilter(source);
+    }
+
+}
+// END OF FILE: src/main/java/com/yowyob/dev/configuration/CorsGlobalConfiguration.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/configuration/DataSourceConfig.java
+
+package com.yowyob.dev.configuration;
+
+import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+
+import javax.sql.DataSource;
+
+@Configuration
+public class DataSourceConfig {
+
+    private final Environment env;
+
+    public DataSourceConfig(Environment env) {
+        this.env = env;
+    }
+
+    @Bean
+    public DataSource getDataSource() {
+        System.out.println("### CONFIGURING JDBC DATASOURCE FOR FLYWAY ###");
+        DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
+        dataSourceBuilder.driverClassName("com.mysql.cj.jdbc.Driver"); // Driver JDBC classique
+        dataSourceBuilder.url(env.getProperty("spring.datasource.url"));
+        dataSourceBuilder.username(env.getProperty("spring.datasource.username"));
+        dataSourceBuilder.password(env.getProperty("spring.datasource.password"));
+        return dataSourceBuilder.build();
+    }
+
+}// END OF FILE: src/main/java/com/yowyob/dev/configuration/DataSourceConfig.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/configuration/OpenAPIConfiguration.java
+
+package com.yowyob.dev.configuration;
+
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.servers.Server;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
+
+@Configuration
+public class OpenAPIConfiguration {
+
+    @Bean
+    public OpenAPI defineOpenApi() {
+        Server server = new Server();
+        server.setUrl("http://157.90.26.3:8031");
+        server.setDescription("Development");
+
+        Contact myContact = new Contact();
+        myContact.setName("Bengono Amvela Nathan");
+        myContact.setEmail("nathanamvelabengono@gmail.com");
+
+        Info information = new Info()
+                .title("Auctions Web Site API")
+                .version("1.0")
+                .description("This API exposes endpoints for auctions web site.")
+                .contact(myContact);
+        return new OpenAPI().info(information).servers(List.of(server));
+    }
+}
+// END OF FILE: src/main/java/com/yowyob/dev/configuration/OpenAPIConfiguration.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/configuration/R2dbcConfig.java
+
+package com.yowyob.dev.configuration;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.r2dbc.spi.ConnectionFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.WritingConverter;
+import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
+import org.springframework.data.r2dbc.convert.R2dbcCustomConversions;
+import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+@Configuration
+@EnableR2dbcRepositories
+public class R2dbcConfig extends AbstractR2dbcConfiguration {
+
+    private final ConnectionFactory connectionFactory;
+
+    public R2dbcConfig(ConnectionFactory connectionFactory) {
+        this.connectionFactory = connectionFactory;
+    }
+
+    @Override
+    public ConnectionFactory connectionFactory() {
+        return this.connectionFactory;
+    }
+
+    @Bean
+    @Override
+    public R2dbcCustomConversions r2dbcCustomConversions() {
+        return new R2dbcCustomConversions(getStoreConversions(), Arrays.asList(
+                new UuidToByteArrayConverter(),
+                new ByteArrayToUuidConverter()
+        ));
+    }
+
+    /**
+     * Convertit UUID vers byte[] pour l'écriture en base (BINARY(16))
+     */
+    @WritingConverter
+    public static class UuidToByteArrayConverter implements Converter<UUID, byte[]> {
+        @Override
+        public byte[] convert(UUID source) {
+            if (source == null) {
+                return null;
+            }
+
+            ByteBuffer buffer = ByteBuffer.allocate(16);
+            buffer.putLong(source.getMostSignificantBits());
+            buffer.putLong(source.getLeastSignificantBits());
+            return buffer.array();
+        }
+    }
+
+    /**
+     * Convertit byte[] vers UUID pour la lecture depuis la base (BINARY(16))
+     */
+    @ReadingConverter
+    public static class ByteArrayToUuidConverter implements Converter<byte[], UUID> {
+        @Override
+        public UUID convert(byte[] source) {
+            if (source == null || source.length != 16) {
+                return null;
+            }
+
+            ByteBuffer buffer = ByteBuffer.wrap(source);
+            long mostSignificantBits = buffer.getLong();
+            long leastSignificantBits = buffer.getLong();
+            return new UUID(mostSignificantBits, leastSignificantBits);
+        }
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/configuration/R2dbcConfig.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/configuration/ReactiveSchedulerConfig.java
+
+package com.yowyob.dev.configuration;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
+
+@Configuration
+public class ReactiveSchedulerConfig {
+
+    @Bean
+    public Scheduler auctionJobScheduler() {
+        // 4 threads pour le job scheduler, à ajuster selon la charge
+        return Schedulers.newBoundedElastic(4, Integer.MAX_VALUE, "auction-job-scheduler");
+    }
+}
+
+// END OF FILE: src/main/java/com/yowyob/dev/configuration/ReactiveSchedulerConfig.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/configuration/TokenPropagationWebClientFilter.java
+
+package com.yowyob.dev.configuration;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.web.reactive.function.client.ClientRequest;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.ExchangeFunction;
+import reactor.core.publisher.Mono;
+
+/**
+ * Un filtre pour WebClient qui propage le token JWT de la requête entrante
+ * vers la requête sortante.
+ */
+public class TokenPropagationWebClientFilter implements ExchangeFilterFunction {
+
+    @Override
+    public Mono<ClientResponse> filter(ClientRequest request, ExchangeFunction next) {
+        // Récupérer le contexte de sécurité réactif
+        return ReactiveSecurityContextHolder.getContext()
+                .flatMap(context -> {
+                    Authentication authentication = context.getAuthentication();
+                    // Vérifier si l'utilisateur est authentifié et si c'est une authentification JWT
+                    if (authentication instanceof JwtAuthenticationToken) {
+                        return Mono.just(authentication);
+                    }
+                    return Mono.empty();
+                })
+                .flatMap(authentication -> {
+                    // Extraire la valeur brute du token
+                    String tokenValue = ((JwtAuthenticationToken) authentication).getToken().getTokenValue();
+                    // Créer une nouvelle requête en ajoutant l'en-tête Authorization
+                    ClientRequest newRequest = ClientRequest.from(request)
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenValue)
+                            .build();
+                    return next.exchange(newRequest);
+                })
+                // Si aucun contexte de sécurité n'est trouvé, continuer la requête sans token
+                .switchIfEmpty(next.exchange(request));
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/configuration/TokenPropagationWebClientFilter.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/configuration/TransactionConfig.java
+
+package com.yowyob.dev.configuration;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.r2dbc.connection.R2dbcTransactionManager;
+import org.springframework.transaction.ReactiveTransactionManager;
+import org.springframework.transaction.reactive.TransactionalOperator;
+import io.r2dbc.spi.ConnectionFactory;
+
+
+@Configuration
+public class TransactionConfig {
+
+    @Bean
+    public ReactiveTransactionManager transactionManager(ConnectionFactory connectionFactory) {
+        return new R2dbcTransactionManager(connectionFactory);
+    }
+
+    @Bean
+    public TransactionalOperator transactionalOperator(ReactiveTransactionManager transactionManager) {
+        return TransactionalOperator.create(transactionManager);
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/configuration/TransactionConfig.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/configuration/WebClientConfig.java
+
+package com.yowyob.dev.configuration;
+
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.TcpClient;
+
+import java.util.concurrent.TimeUnit;
+
+@Configuration
+public class WebClientConfig {
+
+    @Bean
+    public WebClient.Builder webClientBuilder() {
+        TcpClient tcpClient = TcpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .doOnConnected(connection -> {
+                    connection.addHandlerLast(new ReadTimeoutHandler(5, TimeUnit.SECONDS));
+                    connection.addHandlerLast(new WriteTimeoutHandler(5, TimeUnit.SECONDS));
+                });
+
+        HttpClient httpClient = HttpClient.from(tcpClient);
+
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .filter(new TokenPropagationWebClientFilter());
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/configuration/WebClientConfig.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/configuration/WebConfig.java
+
+package com.yowyob.dev.configuration;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.config.ResourceHandlerRegistry;
+import org.springframework.web.reactive.config.WebFluxConfigurer;
+
+@Configuration
+public class WebConfig implements WebFluxConfigurer {
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:/uploads/");
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/configuration/WebConfig.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/configuration/WebFluxConfig.java
+
+package com.yowyob.dev.configuration;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.http.codec.ServerCodecConfigurer;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.web.reactive.config.EnableWebFlux;
+import org.springframework.web.reactive.config.WebFluxConfigurer;
+
+import java.util.UUID;
+
+@Configuration
+@EnableWebFlux
+public class WebFluxConfig implements WebFluxConfigurer {
+
+    @Bean
+    @Primary
+    public ObjectMapper objectMapper() {
+        // Module pour gérer explicitement les UUID
+        SimpleModule uuidModule = new SimpleModule();
+        uuidModule.addSerializer(UUID.class, new com.fasterxml.jackson.databind.ser.std.UUIDSerializer());
+        uuidModule.addDeserializer(UUID.class, new com.fasterxml.jackson.databind.deser.std.UUIDDeserializer());
+
+        return JsonMapper.builder()
+                .addModule(new JavaTimeModule())
+                .addModule(uuidModule)
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+                .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+                .build();
+    }
+
+    @Override
+    public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
+        ObjectMapper mapper = objectMapper();
+
+        configurer.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(mapper));
+        configurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(mapper));
+        configurer.defaultCodecs().maxInMemorySize(10 * 1024 * 1024);
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/configuration/WebFluxConfig.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/controllers/advice/RestExceptionHandler.java
+
+package com.yowyob.dev.controllers.advice;
+
+import com.yowyob.dev.dto.responseDTO.ApiError;
+import com.yowyob.dev.exceptions.NotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.support.WebExchangeBindException;
+import reactor.core.publisher.Mono;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.util.stream.Collectors;
+
+import com.yowyob.dev.exceptions.InvalidRequestException;
+
+@Slf4j
+@RestControllerAdvice
+public class RestExceptionHandler {
+
+    @ExceptionHandler(NotFoundException.class)
+    public Mono<ResponseEntity<ApiError>> handleNotFoundException(NotFoundException ex) {
+        ApiError error = ApiError.builder()
+                .value(String.valueOf(HttpStatus.NOT_FOUND.value()))
+                .text(ex.getMessage())
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(error));
+    }
+
+    @ExceptionHandler(WebExchangeBindException.class)
+    public Mono<ResponseEntity<ApiError>> handleValidationException(WebExchangeBindException ex) {
+        String errors = ex.getBindingResult().getAllErrors().stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.joining(", "));
+
+        ApiError error = ApiError.builder()
+                .value(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+                .text("Validation failed: " + errors)
+                .build();
+        return Mono.just(ResponseEntity.badRequest().body(error));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public Mono<ResponseEntity<ApiError>> handleGenericException(Exception ex) {
+        ApiError error = ApiError.builder()
+                .value(String.valueOf(HttpStatus.INTERNAL_SERVER_ERROR.value()))
+                .text("An unexpected error occurred: " + ex.getMessage())
+                .build();
+        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error));
+    }
+
+    @ExceptionHandler(InvalidRequestException.class)
+    public Mono<ApiError> handleInvalidRequest(InvalidRequestException ex) {
+        log.warn("Invalid request: {}", ex.getMessage());
+        return Mono.just(ApiError.builder()
+                .value(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+                .text(ex.getMessage())
+                .build());
+    }
+
+    @ExceptionHandler(JsonProcessingException.class)
+    public Mono<ApiError> handleJsonProcessing(JsonProcessingException ex) {
+        log.warn("JSON parsing error: {}", ex.getMessage());
+        return Mono.just(ApiError.builder()
+                .value(String.valueOf(HttpStatus.BAD_REQUEST.value()))
+                .text("Invalid JSON format in request")
+                .build());
+    }
+}
+// END OF FILE: src/main/java/com/yowyob/dev/controllers/advice/RestExceptionHandler.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/controllers/AuctionController.java
+
+package com.yowyob.dev.controllers;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yowyob.dev.dto.requestDTO.AuctionDTO;
+import com.yowyob.dev.dto.responseDTO.AuctionResponseDTO;
+import com.yowyob.dev.dto.responseDTO.PageResponse;
+import com.yowyob.dev.enumeration.AuctionStatus;
+import com.yowyob.dev.exceptions.InvalidRequestException;
+import com.yowyob.dev.mapper.AuctionMapper;
+import com.yowyob.dev.mapper.CategoryMapper;
+import com.yowyob.dev.models.Auction;
+import com.yowyob.dev.repositories.CategoryRepository;
+import com.yowyob.dev.services.AuctionService;
+import com.yowyob.dev.utils.JwtUtils;
+import io.swagger.v3.oas.annotations.Operation;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/auctions")
+@Slf4j
+public class AuctionController {
+
+    private final AuctionService auctionService;
+    private final AuctionMapper auctionMapper;
+    private final CategoryRepository categoryRepository;
+    private final CategoryMapper categoryMapper;
+    private final ObjectMapper objectMapper;
+
+    public AuctionController(AuctionService auctionService,
+                             AuctionMapper auctionMapper,
+                             CategoryRepository categoryRepository,
+                             CategoryMapper categoryMapper,
+                             ObjectMapper objectMapper) {
+        this.auctionService = auctionService;
+        this.auctionMapper = auctionMapper;
+        this.categoryRepository = categoryRepository;
+        this.categoryMapper = categoryMapper;
+        this.objectMapper = objectMapper;
+    }
+
+    @GetMapping("/test")
+    public Mono<ResponseEntity<String>> check() {
+        return auctionService.testAgencyExistsDirect("ae961770-2673-45f6-b3a1-744c2c5de6ed")
+                .map(exists -> {
+                    if (exists) return ResponseEntity.ok("✔️ Agence trouvée !");
+                    else return ResponseEntity.status(HttpStatus.NOT_FOUND).body("❌ Agence introuvable.");
+                });
+    }
+
+    @GetMapping("/test-uuid")
+    public Mono<Map<String, Object>> testUuid() {
+        Map<String, Object> testData = new HashMap<>();
+        testData.put("testId", UUID.randomUUID());
+        testData.put("anotherUuid", UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
+        testData.put("currentTime", LocalDateTime.now());
+        testData.put("message", "Test UUID serialization");
+
+        return Mono.just(testData);
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<AuctionResponseDTO> createAuction(
+            @RequestPart("auction") String auctionJSON,
+            @RequestPart(value = "images", required = false) Flux<FilePart> imageFiles) {
+
+        return parseAuctionRequest(auctionJSON) // ← Parsing manuel
+                .flatMap(auctionDTO -> {
+                    Flux<FilePart> safeImageFiles = imageFiles != null ? imageFiles : Flux.empty();
+                    return auctionService.createAuction(auctionDTO, safeImageFiles);
+                })
+                .flatMap(this::buildResponseDTO)
+                .onErrorMap(JsonProcessingException.class,
+                        ex -> new InvalidRequestException("Invalid auction data format", ex));
+    }
+
+    private Mono<AuctionResponseDTO> buildResponseDTO(Auction auction) {
+        Mono<List<String>> imagesMono = auctionService.getImagesByAuctionId(auction.getId());
+        Mono<Auction> enrichedAuctionMono = auctionService.enrichAuctionWithDetails(auction);
+
+        return Mono.zip(enrichedAuctionMono, imagesMono)
+                .map(tuple -> {
+                    Auction enrichedAuction = tuple.getT1();
+                    List<String> imageUrls = tuple.getT2();
+
+                    AuctionResponseDTO responseDTO = auctionMapper.toResponseDTO(enrichedAuction);
+                    responseDTO.setImageUrls(imageUrls);
+                    responseDTO.setParticipants(enrichedAuction.getParticipants());
+
+                    return responseDTO;
+                });
+    }
+
+    private Mono<AuctionDTO> parseAuctionRequest(String request) {
+        return Mono.fromCallable(() -> {
+            try {
+                log.info("Parsing auction request: {}", request); // ← Debug log
+                return objectMapper.readValue(request, AuctionDTO.class);
+            } catch (JsonProcessingException e) {
+                log.error("Failed to parse auction request: {}", e.getMessage(), e); // ← Erreur détaillée
+                throw e;
+            }
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    // Endpoint public - pas d'authentification requise
+    @GetMapping("/{id}")
+    public Mono<AuctionResponseDTO> getAuction(@PathVariable UUID id) {
+        return auctionService.getAuctionById(id)
+                .flatMap(this::buildResponseDTO);
+    }
+
+    // Endpoint public - pas d'authentification requise
+    @GetMapping("/categories")
+    public Flux<com.yowyob.dev.dto.responseDTO.CategoryDTO> getCategories() {
+        return categoryRepository.findAll()
+                .map(categoryMapper::toDTO);
+    }
+
+    // Endpoint public - pas d'authentification requise
+    @GetMapping("/recent")
+    public Mono<Page<AuctionResponseDTO>> getRecentAuctions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "7") int days) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        return auctionService.findRecentAuctions(pageable, days)
+                .flatMap(pageEntity -> {
+                    Flux<AuctionResponseDTO> dtoFlux = Flux.fromIterable(pageEntity.getContent())
+                            .flatMap(this::buildResponseDTO);
+
+                    return dtoFlux.collectList()
+                            .map(dtoList -> new PageImpl<>(dtoList, pageable, pageEntity.getTotalElements()));
+                });
+    }
+
+    // Endpoint public - pas d'authentification requise
+    @GetMapping("/ending-soon")
+    public Mono<Page<AuctionResponseDTO>> getAuctionsEndingSoon(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "24") int hours) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("endDate").ascending());
+
+        return auctionService.findAuctionsEndingSoon(pageable, hours)
+                .flatMap(pageEntity -> {
+                    Flux<AuctionResponseDTO> dtoFlux = Flux.fromIterable(pageEntity.getContent())
+                            .flatMap(this::buildResponseDTO);
+
+                    return dtoFlux.collectList()
+                            .map(dtoList -> new PageImpl<>(dtoList, pageable, pageEntity.getTotalElements()));
+                });
+    }
+
+    // Endpoint protégé - authentification requise
+    @GetMapping("/my-auctions")
+    public Flux<AuctionResponseDTO> getMyAuctions() {
+        return JwtUtils.getCurrentUserInfo()
+                .doOnNext(userInfo -> log.info("User {} retrieving their auctions", userInfo.getUsername()))
+                .flatMapMany(userInfo -> {
+                    // TODO: Adapter selon votre logique - ici on suppose que l'agencyId correspond à l'userId
+                    UUID agencyId = UUID.fromString(userInfo.getUserId());
+                    return auctionService.getAuctionsByAgencyId(agencyId);
+                })
+                .flatMap(this::buildResponseDTO);
+    }
+
+    // Endpoint protégé - seul le propriétaire ou un admin peut modifier
+    @PutMapping("/{id}")
+    public Mono<AuctionResponseDTO> updateAuction(
+            @PathVariable UUID id,
+            @RequestBody AuctionDTO updateDto) {
+
+        return JwtUtils.getCurrentUserInfo()
+                .doOnNext(userInfo -> log.info("User {} updating auction {}", userInfo.getUsername(), id))
+                .flatMap(userInfo -> auctionService.updateAuction(id, updateDto))
+                .flatMap(this::buildResponseDTO);
+    }
+
+    // Endpoint protégé - seul le propriétaire ou un admin peut supprimer
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteAuction(@PathVariable UUID id) {
+        return JwtUtils.getCurrentUserInfo()
+                .doOnNext(userInfo -> log.info("User {} deleting auction {}", userInfo.getUsername(), id))
+                .flatMap(userInfo -> auctionService.deleteAuction(id));
+    }
+
+//    private Mono<AuctionResponseDTO> buildResponseDTO(Auction auction) {
+//        AuctionResponseDTO dto = auctionMapper.toResponseDTO(auction);
+//        return categoryRepository.findById(auction.getCategoryId())
+//                .map(categoryMapper::toDTO)
+//                .doOnNext(dto::setCategory)
+//                .thenReturn(dto);
+//    }
+
+    @GetMapping("/paged")
+    @Operation(summary = "Lister les enchères paginées avec images")
+    public Mono<ResponseEntity<PageResponse<AuctionResponseDTO>>> getPagedAuctions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
+
+        return auctionService.getPagedAuctions(pageable)
+                .flatMap(pageResult -> Flux.fromIterable(pageResult.getContent())
+                        .flatMap(this::buildResponseDTO)
+                        .collectList()
+                        .map(dtoList -> {
+                            PageResponse<AuctionResponseDTO> pageResponse = new PageResponse<>(
+                                    dtoList,
+                                    pageResult.getTotalElements(),
+                                    pageResult.getPage(),
+                                    pageResult.getSize()
+                            );
+                            return ResponseEntity.ok(pageResponse);
+                        })
+                );
+    }
+
+
+
+    @GetMapping("/by-status")
+    @Operation(summary = "Lister les enchères par statut avec images")
+    public Mono<ResponseEntity<PageResponse<AuctionResponseDTO>>> getAuctionsByStatus(
+            @RequestParam AuctionStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
+
+        return auctionService.getAuctionsByStatus(status, pageable)
+                .flatMap(pageResult ->
+                        Flux.fromIterable(pageResult.getContent())
+                                .flatMap(this::buildResponseDTO)
+                                .collectList()
+                                .map(dtoList -> {
+                                    PageResponse<AuctionResponseDTO> pageResponse = new PageResponse<>(
+                                            dtoList,
+                                            pageResult.getTotalElements(),
+                                            pageResult.getPage(),
+                                            pageResult.getSize()
+                                    );
+                                    return ResponseEntity.ok(pageResponse);
+                                })
+                );
+    }
+
+
+
+    @GetMapping("/by-category")
+    @Operation(summary = "Lister les enchères par catégorie avec images")
+    public Mono<ResponseEntity<PageResponse<AuctionResponseDTO>>> getAuctionsByCategory(
+            @RequestParam UUID categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startDate"));
+
+        return auctionService.getAuctionsByCategory(categoryId, pageable)
+                .flatMap(pageResult ->
+                        Flux.fromIterable(pageResult.getContent())
+                                .flatMap(this::buildResponseDTO)
+                                .collectList()
+                                .map(dtoList -> {
+                                    PageResponse<AuctionResponseDTO> pageResponse = new PageResponse<>(
+                                            dtoList,
+                                            pageResult.getTotalElements(),
+                                            pageResult.getPage(),
+                                            pageResult.getSize()
+                                    );
+                                    return ResponseEntity.ok(pageResponse);
+                                })
+                );
+    }
+
+
+
+}// END OF FILE: src/main/java/com/yowyob/dev/controllers/AuctionController.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/controllers/BidController.java
+
+package com.yowyob.dev.controllers;
+
+import com.yowyob.dev.dto.requestDTO.BidDTO;
+import com.yowyob.dev.dto.responseDTO.UserDTO;
+import com.yowyob.dev.models.Bid;
+import com.yowyob.dev.services.BidService;
+import com.yowyob.dev.utils.JwtUtils;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import lombok.extern.slf4j.Slf4j;
+
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/bids") // Renommé pour suivre les conventions REST (pluriel)
+@Slf4j
+public class BidController {
+
+    private final BidService bidService;
+
+    public BidController(BidService bidService) {
+        this.bidService = bidService;
+    }
+
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<Bid> createBid(@Valid @RequestBody BidDTO dto) {
+        return JwtUtils.getCurrentUserInfo()
+                .flatMap(userInfo -> {
+                    // S'assurer que l'utilisateur fait une offre pour lui-même
+                    dto.setUsername(userInfo.getUsername());
+                    return bidService.createBid(dto);
+                });
+    }
+
+    @GetMapping("/{id}")
+    public Mono<Bid> getBid(@PathVariable UUID id) {
+        return bidService.getBid(id);
+    }
+
+    @GetMapping
+    public Flux<Bid> getAllBids() {
+        return bidService.getAllBids();
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public Mono<Void> deleteBid(@PathVariable UUID id) {
+        return JwtUtils.getCurrentUserInfo()
+                .doOnNext(userInfo -> log.info("User {} deleting bid {}", userInfo.getUsername(), id))
+                .flatMap(userInfo -> bidService.deleteBid(id));
+    }
+
+    // Endpoint public - voir les participants d'une enchère
+    @GetMapping("/auction/{auctionId}/participants")
+    public Flux<UserDTO> getAuctionParticipants(@PathVariable UUID auctionId) {
+        return bidService.getParticipants(auctionId);
+    }
+
+    // Endpoint public - voir toutes les offres d'une enchère
+    @GetMapping("/auction/{auctionId}")
+    public Flux<Bid> getAllBidsForAuction(@PathVariable UUID auctionId) {
+        return bidService.getAllBidsOfAuction(auctionId);
+    }
+
+    // Endpoint protégé - voir ses propres offres
+    @GetMapping("/my-bids")
+    public Flux<Bid> getMyBids() {
+        return JwtUtils.getCurrentUsername()
+                .flatMapMany(username ->
+                        bidService.getAllBids()
+                                .filter(bid -> username.equals(bid.getUsername()))
+                );
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/controllers/BidController.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/controllers/login/.gitkeep
+
+// END OF FILE: src/main/java/com/yowyob/dev/controllers/login/.gitkeep
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/DevApplication.java
+
+package com.yowyob.dev;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+@EnableScheduling
+@SpringBootApplication
+public class DevApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(DevApplication.class, args);
+	}
+
+}
+// END OF FILE: src/main/java/com/yowyob/dev/DevApplication.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/.gitkeep
+
+// END OF FILE: src/main/java/com/yowyob/dev/dto/.gitkeep
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/requestDTO/AuctionDTO.java
+
+package com.yowyob.dev.dto.requestDTO;
+
+import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.constraints.*;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+import java.util.List;
+
+@Data
+public class AuctionDTO {
+
+    @NotBlank(message = "Le titre est obligatoire.")
+    private String title;
+
+    @NotBlank(message = "La description est obligatoire.")
+    private String description;
+
+    @NotNull(message = "Le prix initial est obligatoire.")
+    @Positive(message = "Le prix initial doit être supérieur à zéro.")
+    private Double startingPrice;
+
+    @NotNull(message = "La date de début est obligatoire.")
+    @FutureOrPresent(message = "La date de début doit être dans le futur ou dans le présent.")
+    private LocalDateTime startDate;
+
+    @NotNull(message = "La date de fin est obligatoire.")
+    @FutureOrPresent(message = "La date de fin doit être dans le futur ou  dans le présent.")
+    private LocalDateTime endDate;
+
+    @NotNull(message = "Le vendeur est obligatoire.")
+    private UUID agencyId;
+
+    private UUID categoryId;
+
+//    @NotNull(message = "Les images sont obligatoires.")
+//    private List<MultipartFile> images;
+
+    private String ItemCondition;
+}
+// END OF FILE: src/main/java/com/yowyob/dev/dto/requestDTO/AuctionDTO.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/requestDTO/AuctionUpdateDTO.java
+
+package com.yowyob.dev.dto.requestDTO;
+
+
+import com.yowyob.dev.enumeration.AuctionStatus;
+import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Data
+public class AuctionUpdateDTO {
+
+    private String title;
+
+    private String description;
+
+    private Double startingPrice;
+
+    private LocalDateTime startDate;
+
+    private LocalDateTime endDate;
+
+    private List<MultipartFile> images;
+
+    private String itemCondition;
+
+    private UUID category_id;
+
+    private AuctionStatus status;
+}
+// END OF FILE: src/main/java/com/yowyob/dev/dto/requestDTO/AuctionUpdateDTO.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/requestDTO/BidDTO.java
+
+package com.yowyob.dev.dto.requestDTO;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.Data;
+
+import java.util.UUID;
+
+@Data
+public class BidDTO {
+
+    @NotNull(message = "Le montant de l'offre est obligatoire.")
+    @Positive(message = "Le montant doit être supérieur à zéro.")
+    private Double price;
+
+    @NotNull(message = "L'identifiant de l'enchère est obligatoire.")
+    private UUID auctionId;
+
+    @NotNull(message = "L'username de l'utilisateur est obligatoire.")
+    private String username;
+}
+// END OF FILE: src/main/java/com/yowyob/dev/dto/requestDTO/BidDTO.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/requestDTO/BidUpdateDTO.java
+
+package com.yowyob.dev.dto.requestDTO;
+
+import jakarta.validation.constraints.Positive;
+import lombok.Data;
+
+@Data
+public class BidUpdateDTO {
+
+    @Positive(message = "Le montant doit être supérieur à zéro.")
+    private Double price;
+}
+// END OF FILE: src/main/java/com/yowyob/dev/dto/requestDTO/BidUpdateDTO.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/responseDTO/AgenceDTO.java
+
+package com.yowyob.dev.dto.responseDTO;
+
+
+
+import java.time.LocalDate;
+
+import java.util.UUID;
+
+public class AgenceDTO {
+
+    private UUID id;
+
+    private String shortName;
+
+    private String longName;
+
+    private String description;
+
+    private String location;
+
+
+    private boolean transferable;
+
+//    @ElementCollection
+//    private List<String> images = new ArrayList<>();
+
+    private String greetingMessage;
+
+    private LocalDate registrationDate;
+
+    private double averageRevenue;
+
+    private double capitalShare;
+
+    private String registrationNumber;
+
+    private String socialNetwork;
+
+    private String taxNumber;
+}
+// END OF FILE: src/main/java/com/yowyob/dev/dto/responseDTO/AgenceDTO.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/responseDTO/ApiError.java
+
+package com.yowyob.dev.dto.responseDTO;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class ApiError {
+    private String value;
+    private String text;
+    private Object data;
+}
+// END OF FILE: src/main/java/com/yowyob/dev/dto/responseDTO/ApiError.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/responseDTO/AuctionResponseDTO.java
+
+package com.yowyob.dev.dto.responseDTO;
+
+import com.yowyob.dev.enumeration.AuctionStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AuctionResponseDTO {
+    private UUID id;
+    private String title;
+    private String description;
+    private Double startingPrice;
+    private Double currentPrice;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private AuctionStatus status;
+    private UUID agencyId;
+    private CategoryDTO category; // Utiliser un DTO pour la catégorie
+    private List<String> imageUrls;
+    private String itemCondition;
+    private List<String> participants;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}// END OF FILE: src/main/java/com/yowyob/dev/dto/responseDTO/AuctionResponseDTO.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/responseDTO/CategoryDTO.java
+
+package com.yowyob.dev.dto.responseDTO;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CategoryDTO {
+    private UUID id;
+    private String name;
+    private String description;
+}// END OF FILE: src/main/java/com/yowyob/dev/dto/responseDTO/CategoryDTO.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/responseDTO/PageResponse.java
+
+package com.yowyob.dev.dto.responseDTO;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+public class PageResponse<T> {
+    private List<T> content;
+    private long totalElements;
+    private int page;
+    private int size;
+}
+// END OF FILE: src/main/java/com/yowyob/dev/dto/responseDTO/PageResponse.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/dto/responseDTO/UserDTO.java
+
+package com.yowyob.dev.dto.responseDTO;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserDTO {
+    private UUID id;
+    private String username;
+    private String name;
+    private String phoneNumber; // Corrigé le nom de la propriété
+    private String email;
+    private String role;
+}// END OF FILE: src/main/java/com/yowyob/dev/dto/responseDTO/UserDTO.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/enumeration/AuctionStatus.java
+
+package com.yowyob.dev.enumeration;
+
+public enum AuctionStatus {
+    OPEN,
+    CLOSE
+}
+// END OF FILE: src/main/java/com/yowyob/dev/enumeration/AuctionStatus.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/exceptions/BadRequestException.java
+
+package com.yowyob.dev.exceptions;
+
+public class BadRequestException extends RuntimeException {
+    public BadRequestException(String message) {
+        super(message);
+    }
+}
+// END OF FILE: src/main/java/com/yowyob/dev/exceptions/BadRequestException.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/exceptions/InvalidRequestException.java
+
+package com.yowyob.dev.exceptions;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+@ResponseStatus(HttpStatus.BAD_REQUEST)
+public class InvalidRequestException extends RuntimeException {
+
+    public InvalidRequestException(String message) {
+        super(message);
+    }
+
+    public InvalidRequestException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
+// END OF FILE: src/main/java/com/yowyob/dev/exceptions/InvalidRequestException.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/exceptions/NotFoundException.java
+
+package com.yowyob.dev.exceptions;
+
+public class NotFoundException extends RuntimeException {
+    public NotFoundException(String message) {
+        super(message);
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/exceptions/NotFoundException.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/mapper/AuctionMapper.java
+
+//---> PATH: src/main/java/com/yowyob/dev/mapper/AuctionMapper.java (Nouveau)
+package com.yowyob.dev.mapper;
+
+import com.yowyob.dev.dto.requestDTO.AuctionDTO;
+import com.yowyob.dev.dto.requestDTO.AuctionUpdateDTO;
+import com.yowyob.dev.dto.responseDTO.AuctionResponseDTO;
+import com.yowyob.dev.models.Auction;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+
+@Mapper(componentModel = "spring", uses = {CategoryMapper.class})
+public interface AuctionMapper {
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "currentPrice", ignore = true)
+    @Mapping(target = "participants", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+   // @Mapping(target = "imageUrls", ignore = true)
+    Auction toAuction(AuctionDTO auctionDTO);
+
+    // Le champ "category" dans AuctionResponseDTO sera mappé en utilisant le CategoryMapper
+    @Mapping(target = "imageUrls", ignore = true)
+    AuctionResponseDTO toResponseDTO(Auction auction);
+
+    void updateAuctionFromDto(AuctionUpdateDTO dto, @MappingTarget Auction auction);
+}// END OF FILE: src/main/java/com/yowyob/dev/mapper/AuctionMapper.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/mapper/BidMapper.java
+
+package com.yowyob.dev.mapper;
+
+import com.yowyob.dev.dto.requestDTO.BidDTO;
+import com.yowyob.dev.models.Bid;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+
+@Mapper(componentModel = "spring")
+public interface BidMapper {
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    Bid toBid(BidDTO bidDTO);
+}// END OF FILE: src/main/java/com/yowyob/dev/mapper/BidMapper.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/mapper/CategoryMapper.java
+
+package com.yowyob.dev.mapper;
+
+import com.yowyob.dev.dto.responseDTO.CategoryDTO;
+import com.yowyob.dev.models.Category;
+import org.mapstruct.Mapper;
+
+@Mapper(componentModel = "spring")
+public interface CategoryMapper {
+    CategoryDTO toDTO(Category category);
+    Category toEntity(CategoryDTO dto);
+}// END OF FILE: src/main/java/com/yowyob/dev/mapper/CategoryMapper.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/models/Auction.java
+
+package com.yowyob.dev.models;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yowyob.dev.enumeration.AuctionStatus;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Table;
+import org.springframework.data.relational.core.mapping.Column;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Table("auction") // Annotation Spring Data R2DBC
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class Auction {
+
+    @Id
+    private UUID id;
+    private String title;
+    private String description;
+    @Column("starting_price")
+    private Double startingPrice;
+    @Column("current_price")
+    private Double currentPrice;
+    @Column("start_date")
+    private LocalDateTime startDate;
+    @Column("end_date")
+    private LocalDateTime endDate;
+    private AuctionStatus status;
+    @Column("agency_id")
+    private UUID agencyId;
+    @Column("category_id")
+    private UUID categoryId;
+//    @Column("image_urls")
+//    private String imageUrls; // Stocke le JSON comme String
+//
+//    // Ajoutez ces méthodes utilitaires pour la conversion
+//    @JsonIgnore
+//    public List<String> getImageUrlsList() {
+//        if (imageUrls == null || imageUrls.trim().isEmpty() || imageUrls.equals("null")) {
+//            return new ArrayList<>();
+//        }
+//
+//        try {
+//            ObjectMapper mapper = new ObjectMapper();
+//            return mapper.readValue(imageUrls, new TypeReference<List<String>>() {});
+//        } catch (Exception e) {
+//            return new ArrayList<>();
+//        }
+//    }
+//
+//    @JsonIgnore
+//    public void setImageUrlsList(List<String> urls) {
+//        if (urls == null || urls.isEmpty()) {
+//            this.imageUrls = "[]";
+//            return;
+//        }
+//
+//        try {
+//            ObjectMapper mapper = new ObjectMapper();
+//            this.imageUrls = mapper.writeValueAsString(urls);
+//        } catch (Exception e) {
+//            this.imageUrls = "[]";
+//        }
+//    }
+    @Column("item_condition")
+    private String itemCondition;
+
+    @Transient // Indique que ce champ n'est pas mappé à une colonne de la table 'auction'
+    private List<Bid> bids = new ArrayList<>();
+    @Transient
+    private List<String> participants = new ArrayList<>();
+
+    @Column("created_at")
+    private LocalDateTime createdAt;
+    @Column("updated_at")
+    private LocalDateTime updatedAt;
+}// END OF FILE: src/main/java/com/yowyob/dev/models/Auction.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/models/Bid.java
+
+package com.yowyob.dev.models;
+
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Persistable;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Table("bid")
+@Setter
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Bid implements Persistable<UUID> {
+    @Id
+    private UUID id;
+    private Double price;
+    @Column("auction_id")
+    private UUID auctionId;
+    private String username;
+    @Column("created_at")
+    private LocalDateTime createdAt;
+    @Column("updated_at")
+    private LocalDateTime updatedAt;
+
+    @Override
+    public boolean isNew() {
+        return true; // Toujours considérer comme nouveau pour les nouvelles instances
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/models/Bid.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/models/Category.java
+
+package com.yowyob.dev.models;
+
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Table("category")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Category {
+    @Id
+    private UUID id;
+    private String name;
+    private String description;
+    @Column("created_at")
+    private LocalDateTime createdAt;
+    @Column("updated_at")
+    private LocalDateTime updatedAt;
+}// END OF FILE: src/main/java/com/yowyob/dev/models/Category.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/models/ImageUrl.java
+
+package com.yowyob.dev.models;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
+
+import java.util.UUID;
+
+@Table("image_urls")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class ImageUrl {
+    @Id
+    private UUID id;
+
+    @Column("auction_id")
+    private UUID auctionId;
+
+    @Column("url")
+    private String url;
+}
+// END OF FILE: src/main/java/com/yowyob/dev/models/ImageUrl.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/repositories/AuctionRepository.java
+
+package com.yowyob.dev.repositories;
+
+import com.yowyob.dev.models.Auction;
+import com.yowyob.dev.enumeration.AuctionStatus;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+@Repository
+// On utilise R2dbcRepository ou ReactiveCrudRepository
+public interface AuctionRepository extends R2dbcRepository<Auction, UUID> {
+
+    Flux<Auction> findByStatus(AuctionStatus status);
+    Flux<Auction> findByCategoryId(UUID categoryId);
+    Mono<Long> countByStatus(AuctionStatus status);
+    Mono<Long> countByCategoryId(UUID categoryId);
+
+    Flux<Auction> findByEndDateBeforeAndStatus(LocalDateTime now, AuctionStatus auctionStatus);
+    Flux<Auction> findByAgencyId(UUID agencyId);
+
+    // Les requêtes avec pagination sont gérées différemment
+    @Query("SELECT * FROM auction WHERE created_at >= :cutoffDate ORDER BY created_at DESC LIMIT :limit OFFSET :offset")
+    Flux<Auction> findRecentAuctions(LocalDateTime cutoffDate, int limit, long offset);
+
+    @Query("SELECT COUNT(id) FROM auction WHERE created_at >= :cutoffDate")
+    Mono<Long> countRecentAuctions(LocalDateTime cutoffDate);
+
+    @Query("SELECT * FROM auction WHERE status = :status AND end_date BETWEEN :startTime AND :endTime ORDER BY end_date ASC LIMIT :limit OFFSET :offset")
+    Flux<Auction> findEndingSoonAuctions(AuctionStatus status, LocalDateTime startTime, LocalDateTime endTime, int limit, long offset);
+
+    @Query("SELECT * FROM auction ORDER BY end_date ASC LIMIT :limit OFFSET :offset")
+    Flux<Auction> findAllAuctionsPaged(int limit, long offset);
+
+
+    @Query("SELECT COUNT(id) FROM auction WHERE status = :status AND end_date BETWEEN :startTime AND :endTime")
+    Mono<Long> countEndingSoonAuctions(AuctionStatus status, LocalDateTime startTime, LocalDateTime endTime);
+
+    @Query("SELECT COUNT(*) FROM auction")
+    Mono<Long> countAllAuctions();
+
+
+}// END OF FILE: src/main/java/com/yowyob/dev/repositories/AuctionRepository.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/repositories/BidRepository.java
+
+//---> PATH: src/main/java/com/yowyob/dev/repositories/BidRepository.java
+package com.yowyob.dev.repositories;
+
+import com.yowyob.dev.models.Bid;
+import org.springframework.data.r2dbc.repository.Query;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+
+import java.util.UUID;
+
+@Repository
+public interface BidRepository extends R2dbcRepository<Bid, UUID> {
+    Flux<Bid> findByAuctionId(UUID auctionId);
+
+    @Query("SELECT username FROM bid WHERE auction_id = :auctionId GROUP BY username ORDER BY MAX(price) DESC")
+    Flux<String> findParticipantsByAuctionOrderByPriceDesc(UUID auctionId);
+}// END OF FILE: src/main/java/com/yowyob/dev/repositories/BidRepository.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/repositories/CategoryRepository.java
+
+package com.yowyob.dev.repositories;
+
+import com.yowyob.dev.models.Category;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.UUID;
+
+@Repository
+public interface CategoryRepository extends R2dbcRepository<Category, UUID> {
+}// END OF FILE: src/main/java/com/yowyob/dev/repositories/CategoryRepository.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/repositories/ImageUrlRepository.java
+
+package com.yowyob.dev.repositories;
+
+import com.yowyob.dev.models.ImageUrl;
+import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+@Repository
+public interface ImageUrlRepository extends R2dbcRepository<ImageUrl, UUID> {
+    Flux<ImageUrl> findByAuctionId(UUID auctionId);
+    Mono<Void> deleteByAuctionId(Long auctionId);
+}// END OF FILE: src/main/java/com/yowyob/dev/repositories/ImageUrlRepository.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/scheduling/AuctionSchedulerService.java
+
+package com.yowyob.dev.scheduling;
+
+import com.yowyob.dev.enumeration.AuctionStatus;
+import com.yowyob.dev.repositories.AuctionRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import reactor.core.scheduler.Scheduler;
+
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AuctionSchedulerService {
+
+    private final AuctionRepository auctionRepository;
+    private final Scheduler auctionJobScheduler;
+
+    @Scheduled(fixedRate = 30000)
+    public void checkAndCloseExpiredAuctions() {
+        auctionRepository.findByEndDateBeforeAndStatus(LocalDateTime.now(), AuctionStatus.OPEN)
+                .flatMap(auction -> {
+                    log.info("Clôture de l'enchère: {} - {}", auction.getId(), auction.getTitle());
+                    auction.setStatus(AuctionStatus.CLOSE);
+                    auction.setUpdatedAt(LocalDateTime.now());
+                    return auctionRepository.save(auction);
+                })
+                .count()
+                .publishOn(auctionJobScheduler) // <-- Exécute sur ton scheduler dédié
+                .subscribe(count -> {
+                    if (count > 0) {
+                        log.info("Vérification terminée : {} enchère(s) clôturée(s).", count);
+                    }
+                }, error -> {
+                    log.error("Erreur lors de la clôture des enchères expirées", error);
+                });
+    }
+}
+// END OF FILE: src/main/java/com/yowyob/dev/scheduling/AuctionSchedulerService.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/security/CustomAccessDeniedHandler.java
+
+package com.yowyob.dev.security;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yowyob.dev.dto.responseDTO.ApiError;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.web.server.authorization.ServerAccessDeniedHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+/**
+ * Gestionnaire pour les erreurs d'autorisation (403)
+ */
+@Component
+public class CustomAccessDeniedHandler implements ServerAccessDeniedHandler {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Override
+    public Mono<Void> handle(ServerWebExchange exchange, AccessDeniedException denied) {
+        ApiError apiError = ApiError.builder()
+                .value(String.valueOf(HttpStatus.FORBIDDEN.value()))
+                .text("Access denied")
+                .data("You don't have permission to access this resource: " + denied.getMessage())
+                .build();
+
+        exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
+        exchange.getResponse().getHeaders().add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+        DataBufferFactory bufferFactory = exchange.getResponse().bufferFactory();
+        try {
+            byte[] bytes = objectMapper.writeValueAsBytes(apiError);
+            DataBuffer buffer = bufferFactory.wrap(bytes);
+            return exchange.getResponse().writeWith(Mono.just(buffer));
+        } catch (JsonProcessingException e) {
+            DataBuffer buffer = bufferFactory.wrap("Access Denied".getBytes());
+            return exchange.getResponse().writeWith(Mono.just(buffer));
+        }
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/security/CustomAccessDeniedHandler.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/security/CustomAuthenticationEntryPoint.java
+
+package com.yowyob.dev.security;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yowyob.dev.dto.responseDTO.ApiError;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+/**
+ * Gestionnaire pour les erreurs d'authentification (401)
+ */
+@Component
+public class CustomAuthenticationEntryPoint implements ServerAuthenticationEntryPoint {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Override
+    public Mono<Void> commence(ServerWebExchange exchange, AuthenticationException ex) {
+        return writeErrorResponse(
+                exchange,
+                HttpStatus.UNAUTHORIZED,
+                "Authentication required",
+                "Valid JWT token is required to access this resource. Error: " + ex.getMessage()
+        );
+    }
+
+    private Mono<Void> writeErrorResponse(ServerWebExchange exchange, HttpStatus status,
+                                          String message, String details) {
+        ApiError apiError = ApiError.builder()
+                .value(String.valueOf(status.value()))
+                .text(message)
+                .data(details)
+                .build();
+
+        exchange.getResponse().setStatusCode(status);
+        exchange.getResponse().getHeaders().add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
+
+        DataBufferFactory bufferFactory = exchange.getResponse().bufferFactory();
+        try {
+            byte[] bytes = objectMapper.writeValueAsBytes(apiError);
+            DataBuffer buffer = bufferFactory.wrap(bytes);
+            return exchange.getResponse().writeWith(Mono.just(buffer));
+        } catch (JsonProcessingException e) {
+            DataBuffer buffer = bufferFactory.wrap("Authentication Error".getBytes());
+            return exchange.getResponse().writeWith(Mono.just(buffer));
+        }
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/security/CustomAuthenticationEntryPoint.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/security/CustomJwtAuthenticationConverter.java
+
+package com.yowyob.dev.security;
+
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import reactor.core.publisher.Mono;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+public class CustomJwtAuthenticationConverter implements Converter<Jwt, Mono<AbstractAuthenticationToken>> {
+
+    @Override
+    public Mono<AbstractAuthenticationToken> convert(Jwt jwt) {
+        Collection<GrantedAuthority> authorities = extractAuthorities(jwt);
+
+        // Créer le token d'authentification avec les autorités extraites
+        JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(jwt, authorities);
+
+        return Mono.just(authenticationToken);
+    }
+
+    private Collection<GrantedAuthority> extractAuthorities(Jwt jwt) {
+        // Extraire le rôle de votre claim "libelle" ou "role"
+        String role = jwt.getClaimAsString("libelle");
+        if (role == null) {
+            role = jwt.getClaimAsString("role");
+        }
+
+        if (role != null && !role.trim().isEmpty()) {
+            // Ajouter le préfixe ROLE_ si ce n'est pas déjà présent
+            String formattedRole = role.startsWith("ROLE_") ? role : "ROLE_" + role.toUpperCase();
+            return List.of(new SimpleGrantedAuthority(formattedRole));
+        }
+
+        // Par défaut, donner le rôle USER si aucun rôle n'est trouvé
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+    }
+
+    /**
+     * Méthode utilitaire pour extraire le nom d'utilisateur du JWT
+     */
+    public static String extractUsername(Jwt jwt) {
+        // Essayer plusieurs claims pour le nom d'utilisateur
+        String username = jwt.getClaimAsString("username");
+        if (username == null) {
+            username = jwt.getClaimAsString("email");
+        }
+        if (username == null) {
+            username = jwt.getSubject();
+        }
+        return username;
+    }
+
+    /**
+     * Méthode utilitaire pour extraire l'ID utilisateur du JWT
+     */
+    public static String extractUserId(Jwt jwt) {
+        return jwt.getClaimAsString("userId");
+    }
+
+    /**
+     * Méthode utilitaire pour extraire le nom complet de l'utilisateur
+     */
+    public static String extractUserName(Jwt jwt) {
+        return jwt.getClaimAsString("name");
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/security/CustomJwtAuthenticationConverter.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/security/CustomReactiveJwtDecoder.java
+
+package com.yowyob.dev.security;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import reactor.core.publisher.Mono;
+
+import java.security.Key;
+import java.time.Instant;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+public class CustomReactiveJwtDecoder implements ReactiveJwtDecoder {
+
+    private final Key signingKey;
+
+    public CustomReactiveJwtDecoder(String secretKey) {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        this.signingKey = Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    @Override
+    public Mono<Jwt> decode(String token) throws JwtException {
+        return Mono.fromCallable(() -> decodeToken(token))
+                .onErrorMap(Exception.class, ex -> new JwtException("JWT decoding failed", ex));
+    }
+
+    private Jwt decodeToken(String token) {
+        try {
+            // Décoder le token avec la même méthode que votre service d'auth
+            Claims claims = Jwts.parser()
+                    .setSigningKey(this.signingKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            // Vérifier l'expiration
+            Date expiration = claims.getExpiration();
+            if (expiration != null && expiration.before(new Date())) {
+                throw new JwtException("Token expired");
+            }
+
+            // Convertir les claims en format Spring Security JWT
+            Map<String, Object> headers = new HashMap<>();
+            headers.put("alg", "HS256");
+            headers.put("typ", "JWT");
+
+            Map<String, Object> jwtClaims = new HashMap<>();
+            claims.forEach(jwtClaims::put);
+
+            // Assurer que les claims standard sont présents
+            if (!jwtClaims.containsKey("sub")) {
+                jwtClaims.put("sub", claims.get("email")); // Utiliser email comme subject
+            }
+            if (!jwtClaims.containsKey("iat")) {
+                jwtClaims.put("iat", Instant.now().getEpochSecond());
+            }
+            if (expiration != null) {
+                jwtClaims.put("exp", expiration.toInstant().getEpochSecond());
+            }
+
+            // Ajouter des claims personnalisés de votre système
+            jwtClaims.put("username", claims.get("email")); // Pour compatibilité
+            jwtClaims.put("userId", claims.get("userId"));
+            jwtClaims.put("role", claims.get("libelle"));
+
+            Instant issuedAt = claims.getIssuedAt() != null
+                    ? claims.getIssuedAt().toInstant()
+                    : Instant.now();
+
+            Instant expiresAt = expiration != null
+                    ? expiration.toInstant()
+                    : Instant.now().plusSeconds(3600); // 1 heure par défaut
+
+            return new Jwt(token, issuedAt, expiresAt, headers, jwtClaims);
+
+        } catch (Exception e) {
+            throw new JwtException("Failed to decode JWT: " + e.getMessage(), e);
+        }
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/security/CustomReactiveJwtDecoder.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/security/.gitkeep
+
+// END OF FILE: src/main/java/com/yowyob/dev/security/.gitkeep
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/security/SecurityConfig.java
+
+package com.yowyob.dev.security;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+
+@Configuration
+@EnableWebFluxSecurity
+@EnableReactiveMethodSecurity
+public class SecurityConfig {
+
+    @Value("${app.jwt.secret-key:faceb782375b50f9d24e043beeca80fae093c934cbf0ade576f4b36258de6b44}")
+    private String jwtSecretKey;
+
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
+
+    public SecurityConfig(CustomAuthenticationEntryPoint authenticationEntryPoint,
+                          CustomAccessDeniedHandler accessDeniedHandler) {
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
+    }
+
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+        return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                // Désactiver les sessions (stateless)
+                .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
+                .authorizeExchange(exchanges -> exchanges
+                        // Endpoints publics
+                        .pathMatchers(
+                                "/api/auctions/recent",
+                                "/api/auctions/ending-soon",
+                                "/api/auctions/{id}",
+                                "/api/auctions/categories",
+                                "/api/uploads/**",
+                                "/api/test/public",
+                                "/api/auctions/test",
+                                "/actuator/health"
+                        ).permitAll()
+                        .pathMatchers("/api/uploads/**").permitAll()
+                        // Permettre l'accès public aux ressources statiques
+                        .pathMatchers("/uploads/**").permitAll()
+                        // Documentation API
+                        .pathMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/webjars/**",
+                                "/api/api-docs/**"
+                        ).permitAll()
+                        // Tous les autres endpoints nécessitent une authentification
+                        .anyExchange().authenticated()
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwt -> jwt
+                                .jwtDecoder(jwtDecoder())
+                                .jwtAuthenticationConverter(new CustomJwtAuthenticationConverter())
+                        )
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
+                .build();
+    }
+
+    @Bean
+    public ReactiveJwtDecoder jwtDecoder() {
+        // Utiliser votre clé secrète HMAC au lieu des JWK
+        return new CustomReactiveJwtDecoder(jwtSecretKey);
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/security/SecurityConfig.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/services/AuctionService.java
+
+package com.yowyob.dev.services;
+
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yowyob.dev.dto.requestDTO.AuctionDTO;
+import com.yowyob.dev.dto.responseDTO.PageResponse;
+import com.yowyob.dev.enumeration.AuctionStatus;
+import com.yowyob.dev.exceptions.NotFoundException;
+import com.yowyob.dev.mapper.AuctionMapper;
+import com.yowyob.dev.models.Auction;
+import com.yowyob.dev.models.ImageUrl;
+import com.yowyob.dev.repositories.AuctionRepository;
+import com.yowyob.dev.repositories.BidRepository;
+import com.yowyob.dev.repositories.CategoryRepository;
+import com.yowyob.dev.repositories.ImageUrlRepository;
+import com.yowyob.dev.security.CustomJwtAuthenticationConverter;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+@Service
+@Slf4j
+public class AuctionService {
+
+    private final AuctionRepository auctionRepository;
+    private final CategoryRepository categoryRepository;
+    private final BidRepository bidRepository;
+    private final AuthService authService;
+    private final AuctionMapper auctionMapper;
+    private final String uploadPath;
+    private final R2dbcEntityTemplate r2dbcEntityTemplate;
+    @Value("${app.user-service.base-url:http://157.90.26.3:8032/api}")
+    private String userServiceBaseUrl;
+    private final ImageUrlRepository imageUrlRepository;
+
+    public AuctionService(AuctionRepository auctionRepository,
+                          CategoryRepository categoryRepository,
+                          BidRepository bidRepository,
+                          AuthService authService,
+                          AuctionMapper auctionMapper,
+                          R2dbcEntityTemplate r2dbcEntityTemplate,
+                          @Value("${app.upload.path:uploads/}") String uploadPath,
+                          @Value("${app.upload.base-url:http://157.90.26.3:8031/api/uploads/}") String uploadBaseUrl, ImageUrlRepository imageUrlRepository) {
+        this.auctionRepository = auctionRepository;
+        this.categoryRepository = categoryRepository;
+        this.bidRepository = bidRepository;
+        this.authService = authService;
+        this.auctionMapper = auctionMapper;
+        this.r2dbcEntityTemplate = r2dbcEntityTemplate;
+        this.uploadPath = uploadPath != null ? uploadPath : "uploads/";
+        this.imageUrlRepository = imageUrlRepository;
+
+        // Créer le répertoire d'upload s'il n'existe pas
+        try {
+            Files.createDirectories(Paths.get(this.uploadPath));
+        } catch (IOException e) {
+            log.error("Failed to create upload directory: {}", this.uploadPath, e);
+        }
+    }
+
+    @Transactional
+    public Mono<Auction> createAuction(AuctionDTO auctionDTO, Flux<FilePart> imageFiles) {
+
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .cast(JwtAuthenticationToken.class)
+                .flatMap(authToken -> {
+                    Auction auction = auctionMapper.toAuction(auctionDTO);
+                    auction.setId(UUID.randomUUID());
+                    auction.setStatus(AuctionStatus.OPEN);
+                    auction.setCreatedAt(LocalDateTime.now());
+                    auction.setUpdatedAt(LocalDateTime.now());
+
+                    Mono<Boolean> agencyExistsMono = authService.agencyExists(auction.getAgencyId().toString());
+                    Mono<Boolean> categoryExistsMono = auction.getCategoryId() != null
+                            ? categoryRepository.existsById(auction.getCategoryId())
+                            : Mono.just(true);
+
+                    return Mono.zip(agencyExistsMono, categoryExistsMono)
+                            .flatMap(tuple -> {
+                                Boolean agencyExists = tuple.getT1();
+                                Boolean categoryExists = tuple.getT2();
+
+                                if (!agencyExists) {
+                                    log.warn("Agency not found: {}", auction.getAgencyId());
+                                    return Mono.error(new NotFoundException("Agency not found"));
+                                }
+
+                                if (!categoryExists) {
+                                    log.warn("Category not found: {}", auction.getCategoryId());
+                                    return Mono.error(new NotFoundException("Category not found"));
+                                }
+
+                                // 1. Insérer l'auction
+                                return r2dbcEntityTemplate.insert(Auction.class)
+                                        .using(auction)
+                                        .doOnSuccess(a -> log.info("Auction inserted with id: {}", a.getId()))
+                                        // 2. Puis gérer les images
+                                        .flatMap(savedAuction -> savePhotos(savedAuction.getId(), imageFiles)
+                                                .then(Mono.just(savedAuction)));
+                            })
+                            .doOnSubscribe(sub -> log.debug("Validation en cours pour l'enchère : {}", auction));
+
+                })
+                .switchIfEmpty(Mono.error(new NotFoundException("Authentication required")))
+                .doOnSuccess(auction -> log.info("Auction created successfully: {}", auction.getId()))
+                .doOnError(error -> log.error("Error creating auction: {}", error.getMessage()));
+    }
+
+    private Mono<Void> savePhotos(UUID auctionId, Flux<FilePart> imageFiles) {
+        return imageFiles.flatMap(filePart -> {
+                    String filename = UUID.randomUUID() + "_" + filePart.filename();
+                    Path path = Paths.get("/uploads/" + filename);
+
+                    return filePart.transferTo(path)
+                            .then(Mono.fromCallable(() -> {
+                                ImageUrl imageUrl = new ImageUrl();
+                                imageUrl.setId(UUID.randomUUID());
+                                imageUrl.setAuctionId(auctionId);
+                                imageUrl.setUrl("/uploads/" + filename);
+                                return imageUrl;
+                            }));
+                })
+                .flatMap(imageUrl -> r2dbcEntityTemplate.insert(ImageUrl.class)
+                        .using(imageUrl))
+                .then();
+    }
+
+
+    public Mono<Auction> getAuctionById(UUID id) {
+        return auctionRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Auction not found")))
+                .flatMap(this::enrichAuctionWithDetails);
+    }
+
+    public Mono<Auction> enrichAuctionWithDetails(Auction auction) {
+        Mono<List<String>> participantsMono = bidRepository
+                .findParticipantsByAuctionOrderByPriceDesc(auction.getId())
+                .collectList();
+
+        Mono<Auction> auctionMono = Mono.just(auction);
+
+        return Mono.zip(auctionMono, participantsMono, (auc, participants) -> {
+            auc.setParticipants(participants);
+            return auc;
+        });
+    }
+
+    public Flux<Auction> getAuctionsByAgencyId(UUID agencyId) {
+        return authService.agencyExists(agencyId.toString())
+                .flatMapMany(exists -> {
+                    if (!exists) {
+                        return Flux.error(new NotFoundException("Agency not found"));
+                    }
+                    return auctionRepository.findByAgencyId(agencyId);
+                });
+    }
+
+    public Mono<Page<Auction>> findRecentAuctions(Pageable pageable, int days) {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(days);
+
+        Flux<Auction> auctions = auctionRepository.findRecentAuctions(
+                cutoffDate,
+                pageable.getPageSize(),
+                pageable.getOffset()
+        );
+
+        Mono<Long> total = auctionRepository.countRecentAuctions(cutoffDate);
+
+        return Mono.zip(auctions.collectList(), total)
+                .map(tuple -> new PageImpl<>(tuple.getT1(), pageable, tuple.getT2()));
+    }
+
+    public Mono<Page<Auction>> findAuctionsEndingSoon(Pageable pageable, int hours) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime endTime = now.plusHours(hours);
+
+        Flux<Auction> auctions = auctionRepository.findEndingSoonAuctions(
+                AuctionStatus.OPEN,
+                now,
+                endTime,
+                pageable.getPageSize(),
+                pageable.getOffset()
+        );
+
+        Mono<Long> total = auctionRepository.countEndingSoonAuctions(
+                AuctionStatus.OPEN,
+                now,
+                endTime
+        );
+
+        return Mono.zip(auctions.collectList(), total)
+                .map(tuple -> new PageImpl<>(tuple.getT1(), pageable, tuple.getT2()));
+    }
+
+
+
+    /**
+     * Met à jour une enchère (seulement par le propriétaire)
+     */
+    public Mono<Auction> updateAuction(UUID auctionId, AuctionDTO updateDto) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .flatMap(authToken -> {
+                    String username = CustomJwtAuthenticationConverter.extractUsername(authToken.getToken());
+
+                    return auctionRepository.findById(auctionId)
+                            .switchIfEmpty(Mono.error(new NotFoundException("Auction not found")))
+                            .flatMap(existingAuction -> {
+                                // Vérifier que l'utilisateur peut modifier cette enchère
+                                // TODO: Implémenter la logique de vérification du propriétaire
+
+                                // Mettre à jour les champs
+                                if (updateDto.getTitle() != null) {
+                                    existingAuction.setTitle(updateDto.getTitle());
+                                }
+                                if (updateDto.getDescription() != null) {
+                                    existingAuction.setDescription(updateDto.getDescription());
+                                }
+                                if (updateDto.getEndDate() != null) {
+                                    existingAuction.setEndDate(updateDto.getEndDate());
+                                }
+                                existingAuction.setUpdatedAt(LocalDateTime.now());
+
+                                return auctionRepository.save(existingAuction);
+                            });
+                })
+                .switchIfEmpty(Mono.error(new NotFoundException("Authentication required")));
+    }
+
+    /**
+     * Supprime une enchère (seulement par le propriétaire)
+     */
+    public Mono<Void> deleteAuction(UUID auctionId) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .flatMap(authToken -> {
+                    String username = CustomJwtAuthenticationConverter.extractUsername(authToken.getToken());
+                    String role = authToken.getToken().getClaimAsString("libelle");
+
+                    return auctionRepository.findById(auctionId)
+                            .switchIfEmpty(Mono.error(new NotFoundException("Auction not found")))
+                            .flatMap(auction -> {
+                                // Vérifier que l'utilisateur peut supprimer cette enchère
+                                // TODO: Implémenter la logique de vérification du propriétaire
+                                // ou vérifier si c'est un admin
+                                if (!"ADMIN".equalsIgnoreCase(role)) {
+                                    // Logique additionnelle pour vérifier le propriétaire
+                                }
+
+                                return auctionRepository.delete(auction);
+                            });
+                })
+                .switchIfEmpty(Mono.error(new NotFoundException("Authentication required")));
+    }
+
+
+    public Mono<Boolean> testAgencyExistsDirect(String agencyId) {
+        String url = userServiceBaseUrl + "/agencies/" + agencyId;
+
+        WebClient webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(
+                        HttpClient.create()
+                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                                .doOnConnected(conn -> {
+                                    conn.addHandlerLast(new ReadTimeoutHandler(3, TimeUnit.SECONDS));
+                                    conn.addHandlerLast(new WriteTimeoutHandler(3, TimeUnit.SECONDS));
+                                })))
+                .build();
+
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(String.class)
+                .doOnNext(response -> System.out.println("✅ Réponse reçue : " + response))
+                .map(response -> {
+                    try {
+                        // Parse manuellement le champ "value"
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode jsonNode = mapper.readTree(response);
+                        return "200".equals(jsonNode.get("value").asText());
+                    } catch (Exception e) {
+                        System.err.println("❌ Erreur parsing JSON: " + e.getMessage());
+                        return false;
+                    }
+                });
+    }
+
+    // Méthode pour récupérer les images d'une enchère
+    public Mono<List<String>> getImagesByAuctionId(UUID auctionId) {
+        return imageUrlRepository.findByAuctionId(auctionId)
+                .map(ImageUrl::getUrl)
+                .collectList();
+    }
+
+    public Mono<PageResponse<Auction>> getPagedAuctions(Pageable pageable) {
+        long offset = pageable.getOffset();
+        int size = pageable.getPageSize();
+
+        Flux<Auction> auctions = auctionRepository.findAllAuctionsPaged(size, offset);
+        Mono<Long> total = auctionRepository.countAllAuctions();
+
+        return Mono.zip(auctions.collectList(), total)
+                .map(tuple -> new PageResponse<>(
+                        tuple.getT1(),
+                        tuple.getT2(),
+                        pageable.getPageNumber(),
+                        pageable.getPageSize()
+                ));
+    }
+
+    public Mono<PageResponse<Auction>> getAuctionsByStatus(AuctionStatus status, Pageable pageable) {
+        long offset = pageable.getOffset();
+        int size = pageable.getPageSize();
+
+        Flux<Auction> auctions = auctionRepository.findByStatus(status)
+                .skip(offset)
+                .take(size);
+
+        Mono<Long> total = auctionRepository.countByStatus(status);
+
+        return Mono.zip(auctions.collectList(), total)
+                .map(tuple -> new PageResponse<>(
+                        tuple.getT1(),
+                        tuple.getT2(),
+                        pageable.getPageNumber(),
+                        pageable.getPageSize()
+                ));
+    }
+
+    public Mono<PageResponse<Auction>> getAuctionsByCategory(UUID categoryId, Pageable pageable) {
+        long offset = pageable.getOffset();
+        int size = pageable.getPageSize();
+
+        Flux<Auction> auctions = auctionRepository.findByCategoryId(categoryId)
+                .skip(offset)
+                .take(size);
+
+        Mono<Long> total = auctionRepository.countByCategoryId(categoryId);
+
+        return Mono.zip(auctions.collectList(), total)
+                .map(tuple -> new PageResponse<>(
+                        tuple.getT1(),
+                        tuple.getT2(),
+                        pageable.getPageNumber(),
+                        pageable.getPageSize()
+                ));
+    }
+
+
+}// END OF FILE: src/main/java/com/yowyob/dev/services/AuctionService.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/services/AuthService.java
+
+package com.yowyob.dev.services;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yowyob.dev.dto.responseDTO.UserDTO;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import reactor.util.retry.Retry;
+
+import java.net.URI;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
+@Service
+@Slf4j
+public class AuthService {
+
+    private final WebClient webClient;
+
+    @Value("${app.auth-service.base-url:https://gateway.yowyob.com/auth-service}")
+    private String authServiceBaseUrl;
+
+    @Value("${app.user-service.base-url:http://157.90.26.3:8032/api}")
+    private String userServiceBaseUrl;
+
+    public AuthService(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024)) // 1MB
+                .build();
+    }
+
+
+    public Mono<Boolean> userExists(String username) {
+//        String url = authServiceBaseUrl + "/user/username/";
+        URI finalUri = UriComponentsBuilder.fromHttpUrl(authServiceBaseUrl)
+                .path("/user/email")
+                .queryParam("emailDTO", username)
+                .build()
+                .toUri();
+
+        System.out.println(finalUri);
+
+        WebClient webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(
+                        HttpClient.create()
+                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                                .doOnConnected(conn -> {
+                                    conn.addHandlerLast(new ReadTimeoutHandler(3, TimeUnit.SECONDS));
+                                    conn.addHandlerLast(new WriteTimeoutHandler(3, TimeUnit.SECONDS));
+                                })))
+                .build();
+
+        return webClient.get()
+                .uri(finalUri)
+                .retrieve()
+                .bodyToMono(String.class)
+                .doOnNext(response -> System.out.println("Réponse reçue : " + response))
+                .map(response -> {
+                    try {
+                        // Parse manuellement le champ "value"
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode jsonNode = mapper.readTree(response);
+                        return "200".equals(jsonNode.get("value").asText());
+                    } catch (Exception e) {
+                        System.err.println("Erreur parsing JSON: " + e.getMessage());
+                        return false;
+                    }
+                });
+    }
+
+    /**
+     * Vérifie si un utilisateur existe par son email
+     * Compatible avec votre endpoint
+     */
+    public Mono<Boolean> userExistsByEmail(String email) {
+        String url = authServiceBaseUrl + "/auth/email/" + email;
+
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .toBodilessEntity()
+                .map(response -> response.getStatusCode().is2xxSuccessful())
+                .doOnSuccess(exists -> log.debug("User with email {} exists: {}", email, exists))
+                .onErrorResume(WebClientResponseException.NotFound.class, ex -> {
+                    log.debug("User with email {} not found", email);
+                    return Mono.just(false);
+                })
+                .onErrorResume(Exception.class, ex -> {
+                    log.error("Error checking if user with email {} exists", email, ex);
+                    return Mono.just(false);
+                })
+                .retryWhen(Retry.backoff(3, Duration.ofMillis(500))
+                        .filter(throwable -> !(throwable instanceof WebClientResponseException.NotFound)))
+                .timeout(Duration.ofSeconds(5));
+    }
+
+    /**
+     * Récupère les détails d'un utilisateur par son username
+     * Compatible avec votre service utilisateur
+     */
+    public Mono<UserDTO> getUserByUsername(String username) {
+        String url = userServiceBaseUrl + "/user/" + username;
+
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(UserDTO.class)
+                .doOnSuccess(user -> log.debug("Retrieved user details for: {}", username))
+                .onErrorResume(WebClientResponseException.NotFound.class, ex -> {
+                    log.warn("User details not found for username: {}", username);
+                    return createEmptyUserDTO(username);
+                })
+                .onErrorResume(Exception.class, ex -> {
+                    log.error("Error retrieving user details for username: {}", username, ex);
+                    return createEmptyUserDTO(username);
+                })
+                .retryWhen(Retry.backoff(3, Duration.ofMillis(5000))
+                        .filter(throwable -> !(throwable instanceof WebClientResponseException.NotFound)))
+                .timeout(Duration.ofSeconds(1000));
+    }
+
+    /**
+     * Récupère les détails d'un utilisateur par son ID
+     * Compatible avec votre endpoint
+     */
+    public Mono<UserDTO> getUserById(String userId) {
+        String url = userServiceBaseUrl + "/user/" + userId;
+
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(UserDTO.class)
+                .doOnSuccess(user -> log.debug("Retrieved user details for ID: {}", userId))
+                .onErrorResume(WebClientResponseException.NotFound.class, ex -> {
+                    log.warn("User details not found for ID: {}", userId);
+                    return createEmptyUserDTO("user_" + userId);
+                })
+                .onErrorResume(Exception.class, ex -> {
+                    log.error("Error retrieving user details for ID: {}", userId, ex);
+                    return createEmptyUserDTO("user_" + userId);
+                })
+                .retryWhen(Retry.backoff(3, Duration.ofMillis(500))
+                        .filter(throwable -> !(throwable instanceof WebClientResponseException.NotFound)))
+                .timeout(Duration.ofSeconds(5));
+    }
+
+    /**
+     * Vérifie si une agence existe
+     */
+    public Mono<Boolean> agencyExists(String agencyId) {
+       String url = userServiceBaseUrl + "/agencies/" + agencyId;
+
+        WebClient webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(
+                        HttpClient.create()
+                                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                                .doOnConnected(conn -> {
+                                    conn.addHandlerLast(new ReadTimeoutHandler(3, TimeUnit.SECONDS));
+                                    conn.addHandlerLast(new WriteTimeoutHandler(3, TimeUnit.SECONDS));
+                                })))
+                .build();
+
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToMono(String.class)
+                .doOnNext(response -> System.out.println("Réponse reçue : " + response))
+                .map(response -> {
+                    try {
+                        // Parse manuellement le champ "value"
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode jsonNode = mapper.readTree(response);
+                        return "200".equals(jsonNode.get("value").asText());
+                    } catch (Exception e) {
+                        System.err.println("Erreur parsing JSON: " + e.getMessage());
+                        return false;
+                    }
+                });
+    }
+
+    /**
+     * Valide un token JWT en utilisant votre endpoint de test
+     */
+    public Mono<Boolean> validateToken(String token) {
+        String url = authServiceBaseUrl + "/auth/test";
+
+        return webClient.get()
+                .uri(url)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .toBodilessEntity()
+                .map(response -> response.getStatusCode().is2xxSuccessful())
+                .doOnSuccess(valid -> log.debug("Token validation result: {}", valid))
+                .onErrorResume(Exception.class, ex -> {
+                    log.error("Error validating token", ex);
+                    return Mono.just(false);
+                })
+                .retryWhen(Retry.backoff(2, Duration.ofMillis(300)))
+                .timeout(Duration.ofSeconds(3));
+    }
+
+    private Mono<UserDTO> createEmptyUserDTO(String username) {
+        UserDTO emptyUser = new UserDTO();
+        // Vous devrez adapter selon votre structure UserDTO
+        return Mono.just(emptyUser);
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/services/AuthService.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/services/BidService.java
+
+package com.yowyob.dev.services;
+
+import com.yowyob.dev.dto.requestDTO.BidDTO;
+import com.yowyob.dev.dto.responseDTO.UserDTO;
+import com.yowyob.dev.exceptions.BadRequestException;
+import com.yowyob.dev.exceptions.NotFoundException;
+import com.yowyob.dev.mapper.BidMapper;
+import com.yowyob.dev.models.Auction;
+import com.yowyob.dev.models.Bid;
+import com.yowyob.dev.repositories.AuctionRepository;
+import com.yowyob.dev.repositories.BidRepository;
+import com.yowyob.dev.security.CustomJwtAuthenticationConverter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.reactive.TransactionalOperator;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.UUID;
+
+@Service
+@Slf4j
+public class BidService {
+
+    private final BidRepository bidRepository;
+    private final AuctionRepository auctionRepository;
+    private final AuthService authService;
+    private final BidMapper bidMapper;
+    private final TransactionalOperator transactionalOperator;
+
+    public BidService(BidRepository bidRepository,
+                      AuctionRepository auctionRepository,
+                      AuthService authService,
+                      BidMapper bidMapper,
+                      TransactionalOperator transactionalOperator) {
+        this.bidRepository = bidRepository;
+        this.auctionRepository = auctionRepository;
+        this.authService = authService;
+        this.bidMapper = bidMapper;
+        this.transactionalOperator = transactionalOperator;
+    }
+
+    /**
+     * Crée une nouvelle offre. Cette opération est transactionnelle pour garantir la cohérence des données
+     * même en cas d'accès concurrents.
+     */
+    public Mono<Bid> createBid(BidDTO dto) {
+        log.info("Creating bid for auction {} by user {} with price {}",
+                dto.getAuctionId(), dto.getUsername(), dto.getPrice());
+
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .flatMap(authToken -> {
+                    // Extraire les informations de l'utilisateur du token JWT
+                    String tokenUsername = CustomJwtAuthenticationConverter.extractUsername(authToken.getToken());
+                    String userId = CustomJwtAuthenticationConverter.extractUserId(authToken.getToken());
+
+                    // Vérifier que l'utilisateur peut faire une offre pour lui-même
+                    if (!dto.getUsername().equals(tokenUsername)) {
+                        return Mono.error(new BadRequestException("You can only bid for yourself"));
+                    }
+
+                    return createBidInternal(dto, tokenUsername, userId);
+                })
+                .switchIfEmpty(Mono.error(new BadRequestException("Authentication required")));
+    }
+
+    private Mono<Bid> createBidInternal(BidDTO dto, String authenticatedUsername, String userId) {
+        // 1. Récupérer l'enchère et le dernier prix proposé
+        Mono<Auction> auctionMono = auctionRepository.findById(dto.getAuctionId())
+                .switchIfEmpty(Mono.error(new NotFoundException("Auction not found")));
+
+        Mono<Double> highestPriceMono = bidRepository.findByAuctionId(dto.getAuctionId())
+                .map(Bid::getPrice)
+                .defaultIfEmpty(0.0)
+                .sort(Comparator.reverseOrder())
+                .next(); // Prend le plus élevé
+
+        // 2. Vérifier que l'utilisateur existe (optionnel si on fait confiance au JWT)
+        Mono<Boolean> userExistsMono = authService.userExists(dto.getUsername());
+
+        // 3. Combiner toutes les validations
+        return Mono.zip(auctionMono, highestPriceMono, userExistsMono)
+                .flatMap(tuple -> {
+                    Auction auction = tuple.getT1();
+                    Double highestPrice = tuple.getT2();
+                    boolean userExists = tuple.getT3();
+
+                    // Validations métier
+                    if (!userExists) {
+                        return Mono.error(new NotFoundException("User '" + dto.getUsername() + "' not found"));
+                    }
+
+                    if (dto.getPrice() <= Math.max(auction.getStartingPrice(), highestPrice)) {
+                        return Mono.error(new BadRequestException(
+                                String.format("Bid amount (%.2f) must be higher than the current price (%.2f)",
+                                        dto.getPrice(), Math.max(auction.getStartingPrice(), highestPrice))));
+                    }
+
+                    if (LocalDateTime.now().isAfter(auction.getEndDate())) {
+                        return Mono.error(new BadRequestException("This auction is closed"));
+                    }
+
+                    // Vérifier que l'utilisateur ne fait pas d'offre sur sa propre enchère
+                    String agencyOwnerUsername = extractUsernameFromAgencyId(auction.getAgencyId());
+                    if (dto.getUsername().equals(agencyOwnerUsername)) {
+                        return Mono.error(new BadRequestException("You cannot bid on your own auction"));
+                    }
+
+                    // 4. Créer et sauvegarder le Bid, et mettre à jour l'enchère
+                    Bid newBid = bidMapper.toBid(dto);
+
+                    newBid.setCreatedAt(LocalDateTime.now());
+                    newBid.setUpdatedAt(LocalDateTime.now());
+
+                    auction.setCurrentPrice(newBid.getPrice());
+                    auction.setUpdatedAt(LocalDateTime.now());
+
+                    newBid.setId(UUID.randomUUID());
+                    // Envelopper la sauvegarde du bid et de l'auction dans une seule transaction
+                    return bidRepository.save(newBid)
+                            .then(auctionRepository.save(auction))
+                            .thenReturn(newBid); // Retourner le bid créé
+                })
+                // Appliquer la transaction à toute la chaîne réactive ci-dessus
+                .as(transactionalOperator::transactional)
+                .doOnSuccess(bid -> log.info("Bid created successfully: {} for auction {}",
+                        bid.getId(), bid.getAuctionId()))
+                .doOnError(error -> log.error("Error creating bid for auction {}: {}",
+                        dto.getAuctionId(), error.getMessage()));
+    }
+
+    public Mono<Bid> getBid(UUID id) {
+        return bidRepository.findById(id)
+                .switchIfEmpty(Mono.error(new NotFoundException("Bid not found")));
+    }
+
+    public Flux<Bid> getAllBids() {
+        return bidRepository.findAll();
+    }
+
+    public Flux<Bid> getAllBidsOfAuction(UUID auctionId) {
+        return bidRepository.findByAuctionId(auctionId)
+                .sort((bid1, bid2) -> bid2.getCreatedAt().compareTo(bid1.getCreatedAt())); // Plus récents en premier
+    }
+
+    public Flux<UserDTO> getParticipants(UUID auctionId) {
+        return bidRepository.findParticipantsByAuctionOrderByPriceDesc(auctionId)
+                .distinct() // On s'assure que chaque participant n'est listé qu'une fois
+                .flatMap(authService::getUserByUsername) // Pour chaque username, on appelle le service externe
+                .take(5); // On prend les 5 premiers (les plus offrants)
+    }
+
+    public Mono<Void> deleteBid(UUID id) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .flatMap(authToken -> {
+                    String username = CustomJwtAuthenticationConverter.extractUsername(authToken.getToken());
+                    String role = authToken.getToken().getClaimAsString("libelle");
+
+                    return bidRepository.findById(id)
+                            .switchIfEmpty(Mono.error(new NotFoundException("Bid not found")))
+                            .flatMap(bid -> {
+                                // Vérifier que l'utilisateur peut supprimer cette offre
+                                if (!bid.getUsername().equals(username) && !"ADMIN".equalsIgnoreCase(role)) {
+                                    return Mono.error(new BadRequestException("You can only delete your own bids"));
+                                }
+                                return bidRepository.delete(bid);
+                            });
+                })
+                .switchIfEmpty(Mono.error(new BadRequestException("Authentication required")));
+    }
+
+    /**
+     * Méthode utilitaire pour extraire le nom d'utilisateur du propriétaire d'une agence
+     * Cette méthode devrait être adaptée selon votre logique métier
+     */
+    private String extractUsernameFromAgencyId(UUID agencyId) {
+        // TODO: Implémenter la logique pour récupérer le propriétaire de l'agence
+        // Pour l'instant, on retourne null pour désactiver cette vérification
+        return null;
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/services/BidService.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/services/CategoryService.java
+
+package com.yowyob.dev.services;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class CategoryService {
+}
+// END OF FILE: src/main/java/com/yowyob/dev/services/CategoryService.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/utils/JwtUtils.java
+
+package com.yowyob.dev.utils;
+
+import com.yowyob.dev.security.CustomJwtAuthenticationConverter;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import reactor.core.publisher.Mono;
+
+/**
+ * Utilitaires pour extraire les informations du JWT dans un contexte réactif
+ */
+public class JwtUtils {
+
+    /**
+     * Extrait le nom d'utilisateur du contexte de sécurité actuel
+     */
+    public static Mono<String> getCurrentUsername() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .map(authToken -> CustomJwtAuthenticationConverter.extractUsername(authToken.getToken()))
+                .switchIfEmpty(Mono.error(new RuntimeException("No authenticated user found")));
+    }
+
+    /**
+     * Extrait l'ID utilisateur du contexte de sécurité actuel
+     */
+    public static Mono<String> getCurrentUserId() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .map(authToken -> CustomJwtAuthenticationConverter.extractUserId(authToken.getToken()))
+                .switchIfEmpty(Mono.error(new RuntimeException("No authenticated user found")));
+    }
+
+    /**
+     * Extrait le nom complet de l'utilisateur du contexte de sécurité actuel
+     */
+    public static Mono<String> getCurrentUserFullName() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .map(authToken -> CustomJwtAuthenticationConverter.extractUserName(authToken.getToken()))
+                .switchIfEmpty(Mono.error(new RuntimeException("No authenticated user found")));
+    }
+
+    /**
+     * Extrait le rôle de l'utilisateur du contexte de sécurité actuel
+     */
+    public static Mono<String> getCurrentUserRole() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .map(authToken -> authToken.getToken().getClaimAsString("libelle"))
+                .switchIfEmpty(Mono.error(new RuntimeException("No authenticated user found")));
+    }
+
+    /**
+     * Vérifie si l'utilisateur actuel a un rôle spécifique
+     */
+    public static Mono<Boolean> hasRole(String role) {
+        return getCurrentUserRole()
+                .map(userRole -> role.equalsIgnoreCase(userRole))
+                .onErrorReturn(false);
+    }
+
+    /**
+     * Vérifie si l'utilisateur actuel est un administrateur
+     */
+    public static Mono<Boolean> isAdmin() {
+        return hasRole("ADMIN");
+    }
+
+    /**
+     * Extrait toutes les informations utilisateur du contexte de sécurité
+     */
+    public static Mono<UserInfo> getCurrentUserInfo() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(context -> context.getAuthentication())
+                .cast(JwtAuthenticationToken.class)
+                .map(authToken -> {
+                    var jwt = authToken.getToken();
+                    return UserInfo.builder()
+                            .username(CustomJwtAuthenticationConverter.extractUsername(jwt))
+                            .userId(CustomJwtAuthenticationConverter.extractUserId(jwt))
+                            .fullName(CustomJwtAuthenticationConverter.extractUserName(jwt))
+                            .email(jwt.getClaimAsString("email"))
+                            .role(jwt.getClaimAsString("libelle"))
+                            .build();
+                })
+                .switchIfEmpty(Mono.error(new RuntimeException("No authenticated user found")));
+    }
+
+    /**
+     * Classe pour encapsuler les informations utilisateur
+     */
+    public static class UserInfo {
+        private String username;
+        private String userId;
+        private String fullName;
+        private String email;
+        private String role;
+
+        // Builder pattern
+        public static UserInfoBuilder builder() {
+            return new UserInfoBuilder();
+        }
+
+        public static class UserInfoBuilder {
+            private String username;
+            private String userId;
+            private String fullName;
+            private String email;
+            private String role;
+
+            public UserInfoBuilder username(String username) {
+                this.username = username;
+                return this;
+            }
+
+            public UserInfoBuilder userId(String userId) {
+                this.userId = userId;
+                return this;
+            }
+
+            public UserInfoBuilder fullName(String fullName) {
+                this.fullName = fullName;
+                return this;
+            }
+
+            public UserInfoBuilder email(String email) {
+                this.email = email;
+                return this;
+            }
+
+            public UserInfoBuilder role(String role) {
+                this.role = role;
+                return this;
+            }
+
+            public UserInfo build() {
+                UserInfo userInfo = new UserInfo();
+                userInfo.username = this.username;
+                userInfo.userId = this.userId;
+                userInfo.fullName = this.fullName;
+                userInfo.email = this.email;
+                userInfo.role = this.role;
+                return userInfo;
+            }
+        }
+
+        // Getters
+        public String getUsername() { return username; }
+        public String getUserId() { return userId; }
+        public String getFullName() { return fullName; }
+        public String getEmail() { return email; }
+        public String getRole() { return role; }
+
+        @Override
+        public String toString() {
+            return "UserInfo{" +
+                    "username='" + username + '\'' +
+                    ", userId='" + userId + '\'' +
+                    ", fullName='" + fullName + '\'' +
+                    ", email='" + email + '\'' +
+                    ", role='" + role + '\'' +
+                    '}';
+        }
+    }
+}// END OF FILE: src/main/java/com/yowyob/dev/utils/JwtUtils.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/com/yowyob/dev/validation/.gitkeep
+
+// END OF FILE: src/main/java/com/yowyob/dev/validation/.gitkeep
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/ink/yowyob/auctions/application/port/out/AuctionRepositoryPort.java
+
+//---> PATH: src/main/java/ink/yowyob/auctions/application/port/out/AuctionRepositoryPort.java
+package ink.yowyob.auctions.application.port.out;
+
+import ink.yowyob.auctions.domain.model.Auction;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.UUID;
+
+public interface AuctionRepositoryPort {
+    Mono<Auction> save(Auction auction);
+    Mono<Void> update(Auction auction);
+    Mono<Auction> findById(UUID auctionId);
+    Flux<Auction> findByAgencyId(UUID agencyId);
+    Flux<Auction> findByCategoryId(UUID categoryId);
+
+    Flux<Auction> findOpenAuctionsEndingBefore(LocalDateTime now);
+
+    /**
+     * Met à jour une enchère et nettoie ses anciennes entrées de lookup.
+     * C'est utile lorsque le statut change (ex: OPEN -> CLOSED).
+     * @param auction L'enchère mise à jour.
+     * @return Un Mono<Void> qui se termine quand l'opération est complète.
+     */
+    Mono<Void> updateAndCleanupLookups(Auction auction);
+}// END OF FILE: src/main/java/ink/yowyob/auctions/application/port/out/AuctionRepositoryPort.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/ink/yowyob/auctions/application/port/out/BidRepositoryPort.java
+
+//---> PATH: src/main/java/ink/yowyob/auctions/application/port/out/BidRepositoryPort.java
+package ink.yowyob.auctions.application.port.out;
+
+import ink.yowyob.auctions.domain.model.Bid;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+public interface BidRepositoryPort {
+    Mono<Bid> save(Bid bid);
+    Flux<Bid> findByAuctionId(UUID auctionId);
+}
+// END OF FILE: src/main/java/ink/yowyob/auctions/application/port/out/BidRepositoryPort.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/ink/yowyob/auctions/application/port/out/CategoryRepositoryPort.java
+
+//---> PATH: src/main/java/ink/yowyob/auctions/application/port/out/CategoryRepositoryPort.java
+package ink.yowyob.auctions.application.port.out;
+
+import ink.yowyob.auctions.domain.model.Category;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+
+public interface CategoryRepositoryPort {
+    Mono<Category> findById(UUID categoryId);
+    Flux<Category> findAll();
+}
+// END OF FILE: src/main/java/ink/yowyob/auctions/application/port/out/CategoryRepositoryPort.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/java/ink/yowyob/auctions/application/port/out/NotificationPort.java
+
+//---> PATH: src/main/java/ink/yowyob/auctions/application/port/out/NotificationPort.java
+package ink.yowyob.auctions.application.port.out;
+
+import ink.yowyob.auctions.domain.model.Bid;
+import reactor.core.publisher.Mono;
+
+import java.util.UUID;
+
+public interface NotificationPort {
+    /**
+     * Notifies all listeners of a specific auction about a new bid.
+     * @param auctionId The ID of the auction being updated.
+     * @param bid The new bid that was placed.
+     * @return A Mono that completes when the notification has been sent.
+     */
+    Mono<Void> notifyNewBid(UUID auctionId, Bid bid);
+
+    /**
+     * Notifies all listeners that an auction has been closed.
+     * @param auctionId The ID of the auction that is now closed.
+     * @return A Mono that completes when the notification has been sent.
+     */
+    Mono<Void> notifyAuctionClosed(UUID auctionId);
+}
+// END OF FILE: src/main/java/ink/yowyob/auctions/application/port/out/NotificationPort.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/resources/application.properties
+
+# --- SERVICE INFO ---
+spring.application.name=yowyob-enchere-backend-reactive
+server.port=8031
+spring.webflux.base-path=/api
+
+# --- BASE DE DONNÃES R2DBC (RÃACTIVE) ---
+spring.r2dbc.url=r2dbc:mysql://157.90.26.3:3307/enchereyowyob?serverTimezone=UTC
+spring.r2dbc.username=${DB_USERNAME:root}
+spring.r2dbc.password=${DB_PASSWORD:Azerty123}
+spring.r2dbc.pool.enabled=true
+spring.r2dbc.pool.initial-size=5
+spring.r2dbc.pool.max-size=20
+
+# --- FLYWAY (MIGRATIONS DB) ---
+spring.datasource.url=jdbc:mysql://157.90.26.3:3307/enchereyowyob?serverTimezone=UTC
+spring.datasource.username=${DB_USERNAME:root}
+spring.datasource.password=${DB_PASSWORD:Azerty123}
+spring.flyway.enabled=true
+spring.flyway.baseline-on-migrate=true
+spring.flyway.locations=classpath:db/migration
+
+# --- JWT CUSTOM (vous avez CustomReactiveJwtDecoder) ---
+app.jwt.secret-key=${JWT_SECRET:faceb782375b50f9d24e043beeca80fae093c934cbf0ade576f4b36258de6b44}
+
+# --- SERVICES EXTERNES ---
+app.auth-service.base-url=${AUTH_SERVICE_URL:http://157.90.26.3:8032/api}
+app.user-service.base-url=${USER_SERVICE_URL:http://157.90.26.3:8032/api}
+
+# --- UPLOAD FILES ---
+app.upload.path=${UPLOAD_PATH:uploads/}
+app.upload.base-url=${UPLOAD_BASE_URL:http://157.90.26.3:8031/api/uploads/}
+
+# --- SWAGGER/OpenAPI ---
+springdoc.api-docs.path=/v3/api-docs
+springdoc.swagger-ui.path=/swagger-ui.html
+
+spring.main.allow-bean-definition-overriding=true// END OF FILE: src/main/resources/application.properties
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/resources/db/.gitkeep
+
+// END OF FILE: src/main/resources/db/.gitkeep
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/resources/db/migration/.gitkeep
+
+// END OF FILE: src/main/resources/db/migration/.gitkeep
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/main/resources/db/migration/V1__Create_initial_schema.sql
+
+-- Table des catégories
+CREATE TABLE category (
+                          id BINARY(16) PRIMARY KEY,
+                          name VARCHAR(255) NOT NULL,
+                          description TEXT,
+                          created_at TIMESTAMP,
+                          updated_at TIMESTAMP
+);
+
+-- Table des enchères
+CREATE TABLE auction (
+                         id BINARY(16) PRIMARY KEY,
+                         title VARCHAR(255) NOT NULL,
+                         description TEXT,
+                         starting_price DECIMAL(19, 2) NOT NULL,
+                         current_price DECIMAL(19, 2),
+                         start_date TIMESTAMP NOT NULL,
+                         end_date TIMESTAMP NOT NULL,
+                         status VARCHAR(50) NOT NULL,
+                         agency_id BINARY(16) NOT NULL,
+                         category_id BINARY(16),
+                         image_urls JSON,
+                         item_condition VARCHAR(255),
+                         created_at TIMESTAMP,
+                         updated_at TIMESTAMP,
+                         FOREIGN KEY (category_id) REFERENCES category(id)
+);
+
+-- Table des offres
+CREATE TABLE bid (
+                     id BINARY(16) PRIMARY KEY,
+                     price DECIMAL(19, 2) NOT NULL,
+                     auction_id BINARY(16) NOT NULL,
+                     username VARCHAR(255) NOT NULL,
+                     created_at TIMESTAMP,
+                     updated_at TIMESTAMP,
+                     FOREIGN KEY (auction_id) REFERENCES auction(id) ON DELETE CASCADE
+);
+
+-- Index pour accélérer les recherches fréquentes
+CREATE INDEX idx_auction_status ON auction(status);
+CREATE INDEX idx_auction_end_date ON auction(end_date);
+CREATE INDEX idx_bid_auction_id ON bid(auction_id);// END OF FILE: src/main/resources/db/migration/V1__Create_initial_schema.sql
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/src/test/java/com/yowyob/dev/DevApplicationTests.java
+
+package com.yowyob.dev;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class DevApplicationTests {
+
+	@Test
+	void contextLoads() {
+	}
+
+}
+// END OF FILE: src/test/java/com/yowyob/dev/DevApplicationTests.java
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/uploads/10c21b27-b483-4bce-9551-d62528338843_servo.jpeg
+
+[Non-text file (e.g., binary, data, compressed) - Contents omitted]
+// END OF FILE: uploads/10c21b27-b483-4bce-9551-d62528338843_servo.jpeg
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/uploads/414d1772-7dc2-4af6-9dc8-b8fe13e01563_servo.jpeg
+
+[Non-text file (e.g., binary, data, compressed) - Contents omitted]
+// END OF FILE: uploads/414d1772-7dc2-4af6-9dc8-b8fe13e01563_servo.jpeg
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/uploads/5848980d-a8ad-4352-9ad5-438e5030a6b2_servo.jpeg
+
+[Non-text file (e.g., binary, data, compressed) - Contents omitted]
+// END OF FILE: uploads/5848980d-a8ad-4352-9ad5-438e5030a6b2_servo.jpeg
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/uploads/77c730c3-cbab-4462-868e-91e3cb9ea9c3_servo.jpeg
+
+[Non-text file (e.g., binary, data, compressed) - Contents omitted]
+// END OF FILE: uploads/77c730c3-cbab-4462-868e-91e3cb9ea9c3_servo.jpeg
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/uploads/acf86ba6-5541-405d-ae41-a0fe1d9f086d_servo.jpeg
+
+[Non-text file (e.g., binary, data, compressed) - Contents omitted]
+// END OF FILE: uploads/acf86ba6-5541-405d-ae41-a0fe1d9f086d_servo.jpeg
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/uploads/c673c1d6-0bb5-418a-bf26-3fb2e6fa09a2_servo.jpeg
+
+[Non-text file (e.g., binary, data, compressed) - Contents omitted]
+// END OF FILE: uploads/c673c1d6-0bb5-418a-bf26-3fb2e6fa09a2_servo.jpeg
+
+//---> PATH: /home/nathan/Documents/devWeb/yowyobencherebackend/uploads/.gitkeep
+
+// END OF FILE: uploads/.gitkeep
+

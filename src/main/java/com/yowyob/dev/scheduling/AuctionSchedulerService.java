@@ -2,6 +2,7 @@ package com.yowyob.dev.scheduling;
 
 import com.yowyob.dev.enumeration.AuctionStatus;
 import com.yowyob.dev.repositories.AuctionRepository;
+import com.yowyob.dev.services.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,6 +18,7 @@ public class AuctionSchedulerService {
 
     private final AuctionRepository auctionRepository;
     private final Scheduler auctionJobScheduler;
+    private final NotificationService notificationService; // Injection
 
     @Scheduled(fixedRate = 30000)
     public void checkAndCloseExpiredAuctions() {
@@ -25,7 +27,8 @@ public class AuctionSchedulerService {
                     log.info("Clôture de l'enchère: {} - {}", auction.getId(), auction.getTitle());
                     auction.setStatus(AuctionStatus.CLOSE);
                     auction.setUpdatedAt(LocalDateTime.now());
-                    return auctionRepository.save(auction);
+                    return auctionRepository.save(auction)
+                            .doOnSuccess(notificationService::notifyWinnerPaymentDue);
                 })
                 .count()
                 .publishOn(auctionJobScheduler) // <-- Exécute sur ton scheduler dédié
