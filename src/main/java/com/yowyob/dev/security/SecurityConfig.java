@@ -52,12 +52,11 @@ public class SecurityConfig {
                         .pathMatchers("/uploads/**").permitAll()
                         // Documentation API
                         .pathMatchers(
-                                "/api/v3/api-docs/**",
-                                "/api/swagger-ui.html",
-                                "/api/swagger-ui/**",
-                                "/api/webjars/**",
-                                "/api/api-docs/**",
-                                "/webjars/**"
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/webjars/**",
+                                "/api/api-docs/**"
                         ).permitAll()
                         // Tous les autres endpoints nécessitent une authentification
                         .anyExchange().authenticated()
